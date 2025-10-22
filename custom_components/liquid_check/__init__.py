@@ -78,10 +78,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "header": {
                 "namespace": "Device.Control",
                 "name": name,
-                "messageId": "603D751B-EA6C0A2B",
-                "correlationToken": "9224B227-BD79-8B46-3935-640D78F5339A",
-                "payloadVersion": "1",
-                "authorization": None
+                "messageId": "1",
+                "payloadVersion": "1"
             },
             "payload": None
         }
