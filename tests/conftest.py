@@ -21,7 +21,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
         domain="liquid_check",
-        data={"name": "Test Liquid Check", "host": "192.168.1.100"},
+        data={"name": "Test Liquid Check", "host": "192.168.1.100", "scan_interval": 60},
         entry_id="test_entry_id",
     )
 

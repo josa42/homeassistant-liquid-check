@@ -27,7 +27,9 @@ async def test_form(hass: HomeAssistant):
 
     assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Test Device"
-    assert result2["data"] == {"name": "Test Device", "host": "192.168.1.100"}
+    assert result2["data"]["name"] == "Test Device"
+    assert result2["data"]["host"] == "192.168.1.100"
+    assert result2["data"]["scan_interval"] == 60  # default value
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -82,3 +84,29 @@ async def test_form_unknown_error(hass: HomeAssistant):
 
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_form_with_custom_scan_interval(hass: HomeAssistant):
+    """Test the user config flow with custom scan interval."""
+    result = await hass.config_entries.flow.async_init(
+        "liquid_check", context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "custom_components.liquid_check.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"name": "Test Device", "host": "192.168.1.100", "scan_interval": 120},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Test Device"
+    assert result2["data"]["name"] == "Test Device"
+    assert result2["data"]["host"] == "192.168.1.100"
+    assert result2["data"]["scan_interval"] == 120
+    assert len(mock_setup_entry.mock_calls) == 1

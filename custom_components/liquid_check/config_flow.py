@@ -14,6 +14,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required("name"): str,
         vol.Required("host"): str,
+        vol.Optional("scan_interval", default=60): vol.All(
+            vol.Coerce(int), vol.Range(min=10, max=3600)
+        ),
     }
 )
 

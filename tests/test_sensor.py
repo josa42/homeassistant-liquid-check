@@ -19,6 +19,8 @@ async def test_sensor_setup(hass: HomeAssistant, mock_config_entry: MockConfigEn
 
 async def test_sensor_coordinator_url(mock_config_entry: MockConfigEntry):
     """Test coordinator uses correct URL from config."""
+    from datetime import timedelta
+
     from homeassistant.core import HomeAssistant
 
     from custom_components.liquid_check.sensor import LiquidCheckDataUpdateCoordinator
@@ -27,6 +29,27 @@ async def test_sensor_coordinator_url(mock_config_entry: MockConfigEntry):
     coordinator = LiquidCheckDataUpdateCoordinator(hass, mock_config_entry)
     
     assert coordinator.host == "192.168.1.100"
+    assert coordinator.update_interval == timedelta(seconds=60)
+
+
+async def test_sensor_coordinator_custom_interval():
+    """Test coordinator uses custom scan interval."""
+    from datetime import timedelta
+
+    from homeassistant.core import HomeAssistant
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    from custom_components.liquid_check.sensor import LiquidCheckDataUpdateCoordinator
+    
+    entry = MockConfigEntry(
+        domain="liquid_check",
+        data={"name": "Test", "host": "192.168.1.100", "scan_interval": 120},
+    )
+    
+    hass = HomeAssistant("/test")
+    coordinator = LiquidCheckDataUpdateCoordinator(hass, entry)
+    
+    assert coordinator.update_interval == timedelta(seconds=120)
 
 
 async def test_sensor_entities_have_correct_units():

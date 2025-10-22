@@ -6,11 +6,13 @@
         "description": "Configure your Liquid Check device",
         "data": {
           "name": "Name",
-          "host": "IP Address or Hostname"
+          "host": "IP Address or Hostname",
+          "scan_interval": "Update Interval (seconds)"
         },
         "data_description": {
           "name": "A friendly name for this device",
-          "host": "The IP address or hostname of your Liquid Check device"
+          "host": "The IP address or hostname of your Liquid Check device",
+          "scan_interval": "How often to fetch data from the device (10-3600 seconds, default: 60)"
         }
       }
     },

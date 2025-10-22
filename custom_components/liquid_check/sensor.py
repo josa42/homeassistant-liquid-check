@@ -28,7 +28,7 @@ from homeassistant.helpers.update_coordinator import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=30)
+DEFAULT_SCAN_INTERVAL = 60
 
 
 async def async_setup_entry(
@@ -62,11 +62,12 @@ class LiquidCheckDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize."""
         self.host = entry.data["host"]
+        scan_interval = entry.data.get("scan_interval", DEFAULT_SCAN_INTERVAL)
         super().__init__(
             hass,
             _LOGGER,
             name="Liquid Check",
-            update_interval=SCAN_INTERVAL,
+            update_interval=timedelta(seconds=scan_interval),
         )
 
     async def _async_update_data(self):
