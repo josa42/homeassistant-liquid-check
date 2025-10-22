@@ -7,11 +7,14 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 async def test_start_measure_service(hass: HomeAssistant, mock_config_entry: MockConfigEntry):
     """Test the start_measure service."""
+    from custom_components.liquid_check import async_setup_entry
+    
     mock_config_entry.add_to_hass(hass)
 
-    # Set up the integration using config entries
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    # Mock the platform forwarding to avoid coordinator threads
+    with patch("homeassistant.config_entries.ConfigEntries.async_forward_entry_setups", return_value=None):
+        assert await async_setup_entry(hass, mock_config_entry)
+        await hass.async_block_till_done()
 
     # Mock the HTTP response
     mock_response = MagicMock()
@@ -42,10 +45,6 @@ async def test_start_measure_service(hass: HomeAssistant, mock_config_entry: Moc
     assert call_args[1]["json"]["header"]["name"] == "StartMeasure"
     assert call_args[1]["json"]["payload"] is None
     assert call_args[1]["headers"]["Content-Type"] == "application/json; charset=utf-8"
-    
-    # Clean up
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
 
 
 async def test_start_measure_service_invalid_device(hass: HomeAssistant, mock_config_entry: MockConfigEntry):
