@@ -10,9 +10,9 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 
 from .client import LiquidCheckClient
+from .const import DOMAIN
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BUTTON]
-DOMAIN = "liquid_check"
 
 _LOGGER = logging.getLogger(__name__)
 

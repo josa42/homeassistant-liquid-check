@@ -8,7 +8,7 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
-from . import DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
