@@ -5,6 +5,8 @@ on:
     branches: [main, master]
   pull_request:
     branches: [main, master]
+  schedule:
+    - cron: "0 0 * * *"
 
 jobs:
   lint:
@@ -28,7 +30,6 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -45,3 +46,16 @@ jobs:
       - name: Run tests with pytest
         run: |
           pytest tests/ -v --tb=short
+
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: HACS validation
+        uses: hacs/action@main
+        with:
+          category: integration
+
+      - name: Hassfest validation
+        uses: home-assistant/actions/hassfest@master
