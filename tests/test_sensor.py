@@ -52,6 +52,24 @@ async def test_sensor_coordinator_custom_interval():
     assert coordinator.update_interval == timedelta(seconds=120)
 
 
+async def test_sensor_coordinator_zero_interval_disables_polling():
+    """Test coordinator disables polling when interval is 0."""
+    from homeassistant.core import HomeAssistant
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    from custom_components.liquid_check.sensor import LiquidCheckDataUpdateCoordinator
+    
+    entry = MockConfigEntry(
+        domain="liquid_check",
+        data={"name": "Test", "host": "192.168.1.100", "scan_interval": 0},
+    )
+    
+    hass = HomeAssistant("/test")
+    coordinator = LiquidCheckDataUpdateCoordinator(hass, entry)
+    
+    assert coordinator.update_interval is None
+
+
 async def test_sensor_entities_have_correct_units():
     """Test sensor entities have correct device classes and units."""
     from unittest.mock import MagicMock
@@ -137,7 +155,7 @@ async def test_sensor_entities_have_correct_units():
     uptime_sensor = LiquidCheckUptimeSensor(coordinator, entry)
     assert uptime_sensor._attr_device_class == "duration"
     assert uptime_sensor._attr_native_unit_of_measurement == UnitOfTime.SECONDS
-    assert uptime_sensor._attr_state_class == "measurement"
+    assert uptime_sensor._attr_state_class == "total_increasing"
     assert uptime_sensor.native_value == 7804
     
     # Test error sensor

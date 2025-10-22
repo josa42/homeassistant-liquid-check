@@ -12,7 +12,7 @@ A Home Assistant integration for monitoring Liquid Check devices. Track liquid l
 - 📡 **WiFi Signal** - Monitor device connectivity (RSSI)
 - ⏱️ **Uptime Tracking** - Device and measurement age monitoring
 - 🔧 **Remote Control** - Trigger measurements and restart device
-- 🔄 **Configurable Updates** - Set custom polling intervals (default: 60s)
+- 🔄 **Configurable Updates** - Set custom polling intervals (default: 60s, or disable automatic polling)
 - 📱 **Full Device Support** - Shows up in Home Assistant devices tab
 
 ## Installation
@@ -56,7 +56,7 @@ The integration is configured through the Home Assistant UI:
 3. Enter:
    - **Name**: Friendly name for your device (e.g., "Water Tank")
    - **IP Address**: Device IP address (e.g., 192.168.1.100)
-   - **Scan Interval**: How often to poll the device in seconds (default: 60)
+   - **Scan Interval**: How often to poll the device in seconds (default: 60, set to 0 to disable automatic polling)
 
 ## Sensors
 
@@ -162,6 +162,7 @@ automation:
 - Check device is powered on and connected
 - Verify IP address hasn't changed
 - Check Home Assistant logs for connection errors
+- If scan interval is set to 0, sensors will only update when manually triggered via service calls
 
 **Need more help?**
 - Check [DEV.md](DEV.md) for development setup

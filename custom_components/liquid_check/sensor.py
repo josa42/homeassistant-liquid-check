@@ -64,11 +64,15 @@ class LiquidCheckDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize."""
         self._client = LiquidCheckClient(entry.data["host"])
         scan_interval = entry.data.get("scan_interval", DEFAULT_SCAN_INTERVAL)
+        
+        # If interval is 0, disable automatic polling
+        update_interval = None if scan_interval == 0 else timedelta(seconds=scan_interval)
+        
         super().__init__(
             hass,
             _LOGGER,
             name="Liquid Check",
-            update_interval=timedelta(seconds=scan_interval),
+            update_interval=update_interval,
         )
 
     async def _async_update_data(self):
