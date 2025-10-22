@@ -72,27 +72,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except Exception as err:
             _LOGGER.error("Unexpected error %s on %s: %s", action.lower(), host, err)
     
-    async def handle_start_measure(call: ServiceCall) -> None:
-        """Handle the start_measure service call."""
-        payload = {
+    def create_device_payload(name: str) -> dict:
+        """Create a device control payload with the given command name."""
+        return {
             "header": {
                 "namespace": "Device.Control",
-                "name": "StartMeasure",
-                "messageId": "1",
-                "payloadVersion": "1"
-            },
-            "payload": None
-        }
-        await send_device_command(
-            call.data["device_id"], payload, "Measurement started"
-        )
-    
-    async def handle_restart(call: ServiceCall) -> None:
-        """Handle the restart service call."""
-        payload = {
-            "header": {
-                "namespace": "Device.Control",
-                "name": "Restart",
+                "name": name,
                 "messageId": "603D751B-EA6C0A2B",
                 "correlationToken": "9224B227-BD79-8B46-3935-640D78F5339A",
                 "payloadVersion": "1",
@@ -100,6 +85,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             },
             "payload": None
         }
+    
+    async def handle_start_measure(call: ServiceCall) -> None:
+        """Handle the start_measure service call."""
+        payload = create_device_payload("StartMeasure")
+        await send_device_command(
+            call.data["device_id"], payload, "Measurement started"
+        )
+    
+    async def handle_restart(call: ServiceCall) -> None:
+        """Handle the restart service call."""
+        payload = create_device_payload("Restart")
         await send_device_command(
             call.data["device_id"], payload, "Device restarting"
         )
