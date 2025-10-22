@@ -32,6 +32,10 @@ env/
 ENV/
 .venv/
 
+# Local Home Assistant config
+config/
+!config/.gitkeep
+
 # IDEs
 .vscode/
 .idea/

@@ -16,6 +16,20 @@ Configure the integration through the Home Assistant UI.
 
 This integration follows the [Home Assistant development guidelines](https://developers.home-assistant.io/docs/creating_component_index).
 
+### Quick Local Testing
+
+Test the integration in a local Home Assistant instance using Docker:
+
+```bash
+# Start Home Assistant with the integration
+docker-compose up -d
+
+# Open http://localhost:8123 and add the integration
+# Device & Services → Add Integration → Liquid Check
+```
+
+See [DEV.md](DEV.md) for detailed development setup and troubleshooting.
+
 ### Running Tests
 
 The project uses a virtual environment for dependency isolation.
