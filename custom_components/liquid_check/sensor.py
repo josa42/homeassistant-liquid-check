@@ -83,12 +83,34 @@ class LiquidCheckDataUpdateCoordinator(DataUpdateCoordinator):
                         data = await response.json()
                         payload = data.get("payload", {})
                         
-                        # Combine measure and infos data
+                        # Flatten the nested structure for easier access
                         result = {}
-                        if "measure" in payload:
-                            result.update(payload["measure"])
-                        if "infos" in payload:
-                            result.update(payload["infos"])
+                        
+                        # Get measure data
+                        measure = payload.get("measure", {})
+                        result["level"] = measure.get("level")
+                        result["content"] = measure.get("content")
+                        result["percent"] = measure.get("percent")
+                        result["age"] = measure.get("age")
+                        
+                        # Get system data
+                        system = payload.get("system", {})
+                        result["error"] = system.get("error")
+                        result["uptime"] = system.get("uptime")
+                        
+                        # Get pump data
+                        pump = system.get("pump", {})
+                        result["totalRuns"] = pump.get("totalRuns")
+                        result["totalRuntime"] = pump.get("totalRuntime")
+                        
+                        # Get WiFi data
+                        wifi = payload.get("wifi", {})
+                        access_point = wifi.get("accessPoint", {})
+                        result["rssi"] = access_point.get("rssi")
+                        
+                        # Get device data
+                        device = payload.get("device", {})
+                        result["firmware"] = device.get("firmware")
                         
                         return result
         except aiohttp.ClientError as err:

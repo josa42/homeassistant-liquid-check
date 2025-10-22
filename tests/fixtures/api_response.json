@@ -1,0 +1,68 @@
+{
+    "header": {
+        "namespace": "Device",
+        "name": "Response",
+        "messageId": "test-message-id",
+        "payloadVersion": "1",
+        "authorization": "MASKED-AUTHORIZATION"
+    },
+    "payload": {
+        "measure": {
+            "level": 0.24,
+            "content": 960,
+            "percent": 8.7,
+            "raw": {
+                "level": 0.239979,
+                "content": 959.914795,
+                "percent": 8.726499
+            },
+            "age": 593,
+            "tank": {
+                "maxLevel": 2.75,
+                "shape": 1
+            }
+        },
+        "expansion": {
+            "boardType": -1,
+            "oneWire": null,
+            "board": null
+        },
+        "device": {
+            "firmware": "1.91",
+            "hardware": "C5",
+            "name": "Liquid-Check",
+            "model": {
+                "name": "",
+                "number": 1
+            },
+            "manufacturer": "SI-Elektronik GmbH",
+            "uuid": "MASKED-UUID",
+            "security": {
+                "code": "MASKED-SECURITY-CODE"
+            }
+        },
+        "system": {
+            "error": 0,
+            "uptime": 7804,
+            "pump": {
+                "totalRuns": 12,
+                "totalRuntime": 43
+            }
+        },
+        "wifi": {
+            "station": {
+                "ip": "192.168.1.100",
+                "netmask": "255.255.255.0",
+                "gateway": "192.168.1.1",
+                "dns1": "192.168.1.1",
+                "mac": "AA:BB:CC:DD:EE:FF",
+                "hostname": "Liquid-Check"
+            },
+            "accessPoint": {
+                "ssid": "Test-Network",
+                "bssid": "AA:BB:CC:DD:EE:FF",
+                "rssi": -85
+            }
+        }
+    }
+}
