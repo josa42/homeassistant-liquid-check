@@ -42,6 +42,10 @@ async def test_start_measure_service(hass: HomeAssistant, mock_config_entry: Moc
     assert call_args[1]["json"]["header"]["name"] == "StartMeasure"
     assert call_args[1]["json"]["payload"] is None
     assert call_args[1]["headers"]["Content-Type"] == "application/json; charset=utf-8"
+    
+    # Clean up
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
 
 async def test_start_measure_service_invalid_device(hass: HomeAssistant, mock_config_entry: MockConfigEntry):
