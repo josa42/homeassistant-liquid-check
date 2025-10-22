@@ -8,7 +8,7 @@ A Home Assistant integration for monitoring Liquid Check devices. Track liquid l
 ## Features
 
 - 🌊 **Liquid Level Monitoring** - Real-time liquid level and temperature measurements
-- 📊 **Pump Statistics** - Track total runs, runtime, and pump age
+- 📊 **Pump Statistics** - Track total runs and runtime
 - 📡 **WiFi Signal** - Monitor device connectivity (RSSI)
 - ⏱️ **Uptime Tracking** - Device and measurement age monitoring
 - 🔧 **Remote Control** - Trigger measurements and restart device
