@@ -24,8 +24,14 @@ class LiquidCheckSensor(SensorEntity):
         self._attr_name = f"{entry.data['name']} Liquid Check"
         self._attr_unique_id = f"{entry.entry_id}_liquid_check"
         self._attr_native_value = None
+        self._host = entry.data["host"]
 
     async def async_update(self) -> None:
         """Fetch new state data for the sensor."""
-        # Implement your liquid check logic here
+        # TODO: Implement connection to device at self._host
+        # Example:
+        # response = await self.hass.async_add_executor_job(
+        #     requests.get, f"http://{self._host}/api/status"
+        # )
+        # self._attr_native_value = response.json()["liquid_level"]
         pass

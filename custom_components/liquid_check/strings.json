@@ -3,15 +3,21 @@
     "step": {
       "user": {
         "title": "Set up Liquid Check",
-        "description": "Configure your Liquid Check integration",
+        "description": "Configure your Liquid Check device",
         "data": {
-          "name": "Name"
+          "name": "Name",
+          "host": "IP Address or Hostname"
+        },
+        "data_description": {
+          "name": "A friendly name for this device",
+          "host": "The IP address or hostname of your Liquid Check device"
         }
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect",
-      "unknown": "Unexpected error"
+      "invalid_host": "Invalid IP address or hostname",
+      "cannot_connect": "Failed to connect to the device",
+      "unknown": "Unexpected error occurred"
     },
     "abort": {
       "already_configured": "Device is already configured"

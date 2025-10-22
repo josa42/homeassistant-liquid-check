@@ -21,14 +21,29 @@ async def test_form(hass: HomeAssistant):
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"name": "Test Device"},
+            {"name": "Test Device", "host": "192.168.1.100"},
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Test Device"
-    assert result2["data"] == {"name": "Test Device"}
+    assert result2["data"] == {"name": "Test Device", "host": "192.168.1.100"}
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_invalid_host(hass: HomeAssistant):
+    """Test we handle invalid host error."""
+    result = await hass.config_entries.flow.async_init(
+        "liquid_check", context={"source": config_entries.SOURCE_USER}
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"name": "Test Device", "host": "invalid host with spaces"},
+    )
+
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_host"}
 
 
 async def test_form_cannot_connect(hass: HomeAssistant):
@@ -43,7 +58,7 @@ async def test_form_cannot_connect(hass: HomeAssistant):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"name": "Test Device"},
+            {"name": "Test Device", "host": "192.168.1.100"},
         )
 
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
@@ -62,7 +77,7 @@ async def test_form_unknown_error(hass: HomeAssistant):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"name": "Test Device"},
+            {"name": "Test Device", "host": "192.168.1.100"},
         )
 
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
