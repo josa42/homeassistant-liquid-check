@@ -1,0 +1,12 @@
+start_measure:
+  name: Start Measurement
+  description: Trigger a new measurement on the Liquid Check device
+  fields:
+    device_id:
+      name: Device
+      description: The device to trigger measurement on
+      required: true
+      example: "abc123def456"
+      selector:
+        device:
+          integration: liquid_check
