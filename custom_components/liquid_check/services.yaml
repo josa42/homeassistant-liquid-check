@@ -10,3 +10,16 @@ start_measure:
       selector:
         device:
           integration: liquid_check
+
+restart:
+  name: Restart Device
+  description: Restart the Liquid Check device
+  fields:
+    device_id:
+      name: Device
+      description: The device to restart
+      required: true
+      example: "abc123def456"
+      selector:
+        device:
+          integration: liquid_check

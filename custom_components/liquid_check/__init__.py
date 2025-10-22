@@ -23,6 +23,13 @@ SERVICE_START_MEASURE_SCHEMA = vol.Schema(
     }
 )
 
+SERVICE_RESTART = "restart"
+SERVICE_RESTART_SCHEMA = vol.Schema(
+    {
+        vol.Required("device_id"): cv.string,
+    }
+)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Liquid Check from a config entry."""
@@ -77,12 +84,70 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except Exception as err:
             _LOGGER.error("Unexpected error starting measurement on %s: %s", host, err)
     
-    # Register the service
+    async def handle_restart(call: ServiceCall) -> None:
+        """Handle the restart service call."""
+        device_id = call.data["device_id"]
+        
+        # Find the entry with matching device_id
+        config_entry = None
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            if entry.entry_id == device_id:
+                config_entry = entry
+                break
+        
+        if not config_entry:
+            _LOGGER.error("Device with ID %s not found", device_id)
+            return
+        
+        host = config_entry.data["host"]
+        url = f"http://{host}/command"
+        
+        payload = {
+            "header": {
+                "namespace": "Device.Control",
+                "name": "Restart",
+                "messageId": "603D751B-EA6C0A2B",
+                "correlationToken": "9224B227-BD79-8B46-3935-640D78F5339A",
+                "payloadVersion": "1",
+                "authorization": None
+            },
+            "payload": None
+        }
+        
+        try:
+            async with async_timeout.timeout(10):
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(
+                        url,
+                        json=payload,
+                        headers={"Content-Type": "application/json; charset=utf-8"}
+                    ) as response:
+                        if response.status == 200:
+                            _LOGGER.info("Device %s restarting", host)
+                        else:
+                            _LOGGER.error(
+                                "Failed to restart device %s: status %s",
+                                host,
+                                response.status
+                            )
+        except aiohttp.ClientError as err:
+            _LOGGER.error("Error communicating with device %s: %s", host, err)
+        except Exception as err:
+            _LOGGER.error("Unexpected error restarting device %s: %s", host, err)
+    
+    # Register the services
     hass.services.async_register(
         DOMAIN,
         SERVICE_START_MEASURE,
         handle_start_measure,
         schema=SERVICE_START_MEASURE_SCHEMA,
+    )
+    
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_RESTART,
+        handle_restart,
+        schema=SERVICE_RESTART_SCHEMA,
     )
     
     return True
@@ -92,8 +157,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     
-    # Remove service if no more entries
+    # Remove services if no more entries
     if not hass.config_entries.async_entries(DOMAIN):
         hass.services.async_remove(DOMAIN, SERVICE_START_MEASURE)
+        hass.services.async_remove(DOMAIN, SERVICE_RESTART)
     
     return unload_ok
