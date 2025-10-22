@@ -134,7 +134,7 @@ class LiquidCheckBaseSensor(CoordinatorEntity, SensorEntity):
             identifiers={("liquid_check", entry.entry_id)},
             name=entry.data["name"],
             manufacturer="SI-Elektronik GmbH",
-            model="Liquid Check Device",
+            model="Liquid-Check",
             configuration_url=f"http://{entry.data['host']}",
         )
 
