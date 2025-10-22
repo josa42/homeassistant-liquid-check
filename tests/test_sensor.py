@@ -33,16 +33,39 @@ async def test_sensor_entities_have_correct_units():
     """Test sensor entities have correct device classes and units."""
     from unittest.mock import MagicMock
 
-    from homeassistant.const import PERCENTAGE, UnitOfVolume
+    from homeassistant.const import (
+        PERCENTAGE,
+        SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        UnitOfTime,
+        UnitOfVolume,
+    )
 
     from custom_components.liquid_check.sensor import (
+        LiquidCheckAgeSensor,
         LiquidCheckContentSensor,
+        LiquidCheckErrorSensor,
+        LiquidCheckFirmwareSensor,
         LiquidCheckLevelSensor,
         LiquidCheckPercentSensor,
+        LiquidCheckRSSISensor,
+        LiquidCheckTotalRunsSensor,
+        LiquidCheckTotalRuntimeSensor,
+        LiquidCheckUptimeSensor,
     )
     
     coordinator = MagicMock()
-    coordinator.data = {"level": 1.25, "content": 450.5, "percent": 42.3}
+    coordinator.data = {
+        "level": 1.25,
+        "content": 450.5,
+        "percent": 42.3,
+        "rssi": -65,
+        "totalRuns": 1234,
+        "totalRuntime": 86400,
+        "uptime": 3600,
+        "error": 0,
+        "firmware": "1.2.3",
+        "age": 120,
+    }
     
     entry = MagicMock()
     entry.data = {"name": "Test", "host": "192.168.1.100"}
@@ -67,6 +90,47 @@ async def test_sensor_entities_have_correct_units():
     assert percent_sensor._attr_native_unit_of_measurement == PERCENTAGE
     assert percent_sensor._attr_state_class == "measurement"
     assert percent_sensor.native_value == 42.3
+    
+    # Test RSSI sensor
+    rssi_sensor = LiquidCheckRSSISensor(coordinator, entry)
+    assert rssi_sensor._attr_device_class == "signal_strength"
+    assert rssi_sensor._attr_native_unit_of_measurement == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+    assert rssi_sensor._attr_state_class == "measurement"
+    assert rssi_sensor.native_value == -65
+    
+    # Test total runs sensor
+    runs_sensor = LiquidCheckTotalRunsSensor(coordinator, entry)
+    assert runs_sensor._attr_state_class == "total_increasing"
+    assert runs_sensor.native_value == 1234
+    
+    # Test total runtime sensor
+    runtime_sensor = LiquidCheckTotalRuntimeSensor(coordinator, entry)
+    assert runtime_sensor._attr_device_class == "duration"
+    assert runtime_sensor._attr_native_unit_of_measurement == UnitOfTime.SECONDS
+    assert runtime_sensor._attr_state_class == "total_increasing"
+    assert runtime_sensor.native_value == 86400
+    
+    # Test uptime sensor
+    uptime_sensor = LiquidCheckUptimeSensor(coordinator, entry)
+    assert uptime_sensor._attr_device_class == "duration"
+    assert uptime_sensor._attr_native_unit_of_measurement == UnitOfTime.SECONDS
+    assert uptime_sensor._attr_state_class == "measurement"
+    assert uptime_sensor.native_value == 3600
+    
+    # Test error sensor
+    error_sensor = LiquidCheckErrorSensor(coordinator, entry)
+    assert error_sensor.native_value == 0
+    
+    # Test firmware sensor
+    firmware_sensor = LiquidCheckFirmwareSensor(coordinator, entry)
+    assert firmware_sensor.native_value == "1.2.3"
+    
+    # Test age sensor
+    age_sensor = LiquidCheckAgeSensor(coordinator, entry)
+    assert age_sensor._attr_device_class == "duration"
+    assert age_sensor._attr_native_unit_of_measurement == UnitOfTime.SECONDS
+    assert age_sensor._attr_state_class == "measurement"
+    assert age_sensor.native_value == 120
 
 
 async def test_sensor_handles_none_data():

@@ -12,7 +12,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfVolume
+from homeassistant.const import (
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UnitOfTime,
+    UnitOfVolume,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -40,6 +45,13 @@ async def async_setup_entry(
             LiquidCheckLevelSensor(coordinator, entry),
             LiquidCheckContentSensor(coordinator, entry),
             LiquidCheckPercentSensor(coordinator, entry),
+            LiquidCheckRSSISensor(coordinator, entry),
+            LiquidCheckTotalRunsSensor(coordinator, entry),
+            LiquidCheckTotalRuntimeSensor(coordinator, entry),
+            LiquidCheckUptimeSensor(coordinator, entry),
+            LiquidCheckErrorSensor(coordinator, entry),
+            LiquidCheckFirmwareSensor(coordinator, entry),
+            LiquidCheckAgeSensor(coordinator, entry),
         ]
     )
 
@@ -69,7 +81,16 @@ class LiquidCheckDataUpdateCoordinator(DataUpdateCoordinator):
                                 f"Error fetching data: {response.status}"
                             )
                         data = await response.json()
-                        return data.get("payload", {}).get("measure", {})
+                        payload = data.get("payload", {})
+                        
+                        # Combine measure and infos data
+                        result = {}
+                        if "measure" in payload:
+                            result.update(payload["measure"])
+                        if "infos" in payload:
+                            result.update(payload["infos"])
+                        
+                        return result
         except aiohttp.ClientError as err:
             raise UpdateFailed(f"Error communicating with device: {err}") from err
         except Exception as err:
@@ -141,4 +162,164 @@ class LiquidCheckPercentSensor(CoordinatorEntity, SensorEntity):
         """Return the state of the sensor."""
         if self.coordinator.data:
             return self.coordinator.data.get("percent")
+        return None
+
+
+class LiquidCheckRSSISensor(CoordinatorEntity, SensorEntity):
+    """Representation of Liquid Check RSSI Sensor."""
+
+    _attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(
+        self, coordinator: LiquidCheckDataUpdateCoordinator, entry: ConfigEntry
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_name = f"{entry.data['name']} RSSI"
+        self._attr_unique_id = f"{entry.entry_id}_rssi"
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        if self.coordinator.data:
+            return self.coordinator.data.get("rssi")
+        return None
+
+
+class LiquidCheckTotalRunsSensor(CoordinatorEntity, SensorEntity):
+    """Representation of Liquid Check Total Runs Sensor."""
+
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(
+        self, coordinator: LiquidCheckDataUpdateCoordinator, entry: ConfigEntry
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_name = f"{entry.data['name']} Total Runs"
+        self._attr_unique_id = f"{entry.entry_id}_total_runs"
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        if self.coordinator.data:
+            return self.coordinator.data.get("totalRuns")
+        return None
+
+
+class LiquidCheckTotalRuntimeSensor(CoordinatorEntity, SensorEntity):
+    """Representation of Liquid Check Total Runtime Sensor."""
+
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_native_unit_of_measurement = UnitOfTime.SECONDS
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(
+        self, coordinator: LiquidCheckDataUpdateCoordinator, entry: ConfigEntry
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_name = f"{entry.data['name']} Total Runtime"
+        self._attr_unique_id = f"{entry.entry_id}_total_runtime"
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        if self.coordinator.data:
+            return self.coordinator.data.get("totalRuntime")
+        return None
+
+
+class LiquidCheckUptimeSensor(CoordinatorEntity, SensorEntity):
+    """Representation of Liquid Check Uptime Sensor."""
+
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = UnitOfTime.SECONDS
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(
+        self, coordinator: LiquidCheckDataUpdateCoordinator, entry: ConfigEntry
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_name = f"{entry.data['name']} Uptime"
+        self._attr_unique_id = f"{entry.entry_id}_uptime"
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        if self.coordinator.data:
+            return self.coordinator.data.get("uptime")
+        return None
+
+
+class LiquidCheckErrorSensor(CoordinatorEntity, SensorEntity):
+    """Representation of Liquid Check Error Sensor."""
+
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(
+        self, coordinator: LiquidCheckDataUpdateCoordinator, entry: ConfigEntry
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_name = f"{entry.data['name']} Error"
+        self._attr_unique_id = f"{entry.entry_id}_error"
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        if self.coordinator.data:
+            return self.coordinator.data.get("error")
+        return None
+
+
+class LiquidCheckFirmwareSensor(CoordinatorEntity, SensorEntity):
+    """Representation of Liquid Check Firmware Sensor."""
+
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(
+        self, coordinator: LiquidCheckDataUpdateCoordinator, entry: ConfigEntry
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_name = f"{entry.data['name']} Firmware"
+        self._attr_unique_id = f"{entry.entry_id}_firmware"
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        if self.coordinator.data:
+            return self.coordinator.data.get("firmware")
+        return None
+
+
+class LiquidCheckAgeSensor(CoordinatorEntity, SensorEntity):
+    """Representation of Liquid Check Age Sensor."""
+
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = UnitOfTime.SECONDS
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(
+        self, coordinator: LiquidCheckDataUpdateCoordinator, entry: ConfigEntry
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_name = f"{entry.data['name']} Age"
+        self._attr_unique_id = f"{entry.entry_id}_age"
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        if self.coordinator.data:
+            return self.coordinator.data.get("age")
         return None
