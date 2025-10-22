@@ -271,7 +271,7 @@ class LiquidCheckUptimeSensor(LiquidCheckBaseSensor):
     """Representation of Liquid Check Uptime Sensor."""
 
     _attr_device_class = SensorDeviceClass.DURATION
-    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_native_unit_of_measurement = UnitOfTime.SECONDS
     _attr_entity_registry_enabled_default = False
 
