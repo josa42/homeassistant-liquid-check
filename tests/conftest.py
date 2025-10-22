@@ -1,6 +1,6 @@
 """Common fixtures for Liquid Check tests."""
 from collections.abc import Generator
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -33,3 +33,29 @@ def mock_setup_entry() -> Generator:
         "custom_components.liquid_check.async_setup_entry", return_value=True
     ) as mock_setup:
         yield mock_setup
+
+
+@pytest.fixture
+def mock_aiohttp_session():
+    """Mock aiohttp ClientSession with successful response."""
+
+    def _create_mock(response_data, status=200):
+        mock_response = AsyncMock()
+        mock_response.status = status
+        mock_response.json = AsyncMock(return_value=response_data)
+
+        mock_get = AsyncMock()
+        mock_get.__aenter__.return_value = mock_response
+        mock_get.__aexit__.return_value = None
+
+        mock_session_instance = AsyncMock()
+        mock_session_instance.get.return_value = mock_get
+        mock_session_instance.__aenter__.return_value = mock_session_instance
+        mock_session_instance.__aexit__.return_value = None
+
+        return patch(
+            "custom_components.liquid_check.sensor.aiohttp.ClientSession",
+            return_value=mock_session_instance,
+        )
+
+    return _create_mock
