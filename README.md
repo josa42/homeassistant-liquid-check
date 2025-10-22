@@ -66,7 +66,7 @@ The integration provides 10 sensors:
 |--------|-------------|------|
 | **Liquid Level** | Current liquid level | % |
 | **Temperature** | Liquid temperature | °C |
-| **Raw Level** | Raw measurement value | cm |
+| **Level** | Measurement value | m |
 | **WiFi RSSI** | WiFi signal strength | dBm |
 | **Pump Total Runs** | Lifetime pump cycles | - |
 | **Pump Total Runtime** | Lifetime pump operation time | min |
