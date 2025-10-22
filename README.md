@@ -15,3 +15,35 @@ Configure the integration through the Home Assistant UI.
 ## Development
 
 This integration follows the [Home Assistant development guidelines](https://developers.home-assistant.io/docs/creating_component_index).
+
+### Running Tests
+
+The project uses a virtual environment for dependency isolation.
+
+Install dependencies (creates venv automatically):
+```bash
+make install
+```
+
+Run tests:
+```bash
+make test
+```
+
+### Linting
+
+Run linter:
+```bash
+make lint
+```
+
+### Manual Setup
+
+If you prefer to manage the virtual environment manually:
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements_test.txt
+pip install ruff
+pytest tests/ -v
+```
