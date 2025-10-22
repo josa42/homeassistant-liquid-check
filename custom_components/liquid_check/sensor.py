@@ -66,7 +66,9 @@ class LiquidCheckDataUpdateCoordinator(DataUpdateCoordinator):
         scan_interval = entry.data.get("scan_interval", DEFAULT_SCAN_INTERVAL)
         
         # If interval is 0, disable automatic polling
-        update_interval = None if scan_interval == 0 else timedelta(seconds=scan_interval)
+        update_interval = (
+            None if scan_interval == 0 else timedelta(seconds=scan_interval)
+        )
         
         super().__init__(
             hass,
