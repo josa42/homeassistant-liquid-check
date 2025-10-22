@@ -3,13 +3,13 @@ from __future__ import annotations
 
 import logging
 
-import aiohttp
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .client import LiquidCheckClient
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ class LiquidCheckBaseButton(ButtonEntity):
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the button."""
-        self._entry = entry
+        self._client = LiquidCheckClient(entry.data["host"])
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name="Liquid-Check",
@@ -47,26 +47,7 @@ class LiquidCheckBaseButton(ButtonEntity):
 
     async def _send_command(self, command_name: str) -> None:
         """Send command to device."""
-        ip_address = self._entry.data["host"]
-        url = f"http://{ip_address}/command"
-        payload = {
-            "header": {
-                "namespace": "Device.Control",
-                "name": command_name,
-                "messageId": "1",
-                "payloadVersion": "1",
-            },
-            "payload": None,
-        }
-
-        try:
-            async with aiohttp.ClientSession() as session, session.post(
-                url, json=payload, timeout=aiohttp.ClientTimeout(total=10)
-            ) as response:
-                response.raise_for_status()
-        except Exception as err:
-            _LOGGER.error("Failed to send %s command: %s", command_name, err)
-            raise
+        await self._client.send_command(command_name)
 
 
 class LiquidCheckStartMeasureButton(LiquidCheckBaseButton):

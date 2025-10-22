@@ -4,8 +4,6 @@ from __future__ import annotations
 import logging
 from datetime import timedelta
 
-import aiohttp
-import async_timeout
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -26,6 +24,8 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
+
+from .client import LiquidCheckClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ class LiquidCheckDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize."""
-        self.host = entry.data["host"]
+        self._client = LiquidCheckClient(entry.data["host"])
         scan_interval = entry.data.get("scan_interval", DEFAULT_SCAN_INTERVAL)
         super().__init__(
             hass,
@@ -73,52 +73,42 @@ class LiquidCheckDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Fetch data from API."""
-        url = f"http://{self.host}/infos.json"
         try:
-            async with async_timeout.timeout(10):
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(url) as response:
-                        if response.status != 200:
-                            raise UpdateFailed(
-                                f"Error fetching data: {response.status}"
-                            )
-                        data = await response.json()
-                        payload = data.get("payload", {})
-                        
-                        # Flatten the nested structure for easier access
-                        result = {}
-                        
-                        # Get measure data
-                        measure = payload.get("measure", {})
-                        result["level"] = measure.get("level")
-                        result["content"] = measure.get("content")
-                        result["percent"] = measure.get("percent")
-                        result["age"] = measure.get("age")
-                        
-                        # Get system data
-                        system = payload.get("system", {})
-                        result["error"] = system.get("error")
-                        result["uptime"] = system.get("uptime")
-                        
-                        # Get pump data
-                        pump = system.get("pump", {})
-                        result["totalRuns"] = pump.get("totalRuns")
-                        result["totalRuntime"] = pump.get("totalRuntime")
-                        
-                        # Get WiFi data
-                        wifi = payload.get("wifi", {})
-                        access_point = wifi.get("accessPoint", {})
-                        result["rssi"] = access_point.get("rssi")
-                        
-                        # Get device data
-                        device = payload.get("device", {})
-                        result["firmware"] = device.get("firmware")
-                        
-                        return result
-        except aiohttp.ClientError as err:
-            raise UpdateFailed(f"Error communicating with device: {err}") from err
+            data = await self._client.get_info()
+            payload = data.get("payload", {})
+            
+            # Flatten the nested structure for easier access
+            result = {}
+            
+            # Get measure data
+            measure = payload.get("measure", {})
+            result["level"] = measure.get("level")
+            result["content"] = measure.get("content")
+            result["percent"] = measure.get("percent")
+            result["age"] = measure.get("age")
+            
+            # Get system data
+            system = payload.get("system", {})
+            result["error"] = system.get("error")
+            result["uptime"] = system.get("uptime")
+            
+            # Get pump data
+            pump = system.get("pump", {})
+            result["totalRuns"] = pump.get("totalRuns")
+            result["totalRuntime"] = pump.get("totalRuntime")
+            
+            # Get WiFi data
+            wifi = payload.get("wifi", {})
+            access_point = wifi.get("accessPoint", {})
+            result["rssi"] = access_point.get("rssi")
+            
+            # Get device data
+            device = payload.get("device", {})
+            result["firmware"] = device.get("firmware")
+            
+            return result
         except Exception as err:
-            raise UpdateFailed(f"Unexpected error: {err}") from err
+            raise UpdateFailed(f"Error fetching data: {err}") from err
 
 
 class LiquidCheckBaseSensor(CoordinatorEntity, SensorEntity):

@@ -39,7 +39,7 @@ async def test_start_measure_service(hass: HomeAssistant):
     mock_session.__aenter__ = AsyncMock(return_value=mock_session)
     mock_session.__aexit__ = AsyncMock(return_value=None)
 
-    with patch("custom_components.liquid_check.aiohttp.ClientSession", return_value=mock_session):
+    with patch("custom_components.liquid_check.client.aiohttp.ClientSession", return_value=mock_session):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_START_MEASURE,
@@ -114,7 +114,7 @@ async def test_start_measure_service_connection_error(hass: HomeAssistant):
     mock_session.__aenter__ = AsyncMock(return_value=mock_session)
     mock_session.__aexit__ = AsyncMock(return_value=None)
 
-    with patch("custom_components.liquid_check.aiohttp.ClientSession", return_value=mock_session):
+    with patch("custom_components.liquid_check.client.aiohttp.ClientSession", return_value=mock_session):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_START_MEASURE,
@@ -158,7 +158,7 @@ async def test_restart_service(hass: HomeAssistant):
     mock_session.__aenter__ = AsyncMock(return_value=mock_session)
     mock_session.__aexit__ = AsyncMock(return_value=None)
 
-    with patch("custom_components.liquid_check.aiohttp.ClientSession", return_value=mock_session):
+    with patch("custom_components.liquid_check.client.aiohttp.ClientSession", return_value=mock_session):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_RESTART,
@@ -233,7 +233,7 @@ async def test_restart_service_connection_error(hass: HomeAssistant):
     mock_session.__aenter__ = AsyncMock(return_value=mock_session)
     mock_session.__aexit__ = AsyncMock(return_value=None)
 
-    with patch("custom_components.liquid_check.aiohttp.ClientSession", return_value=mock_session):
+    with patch("custom_components.liquid_check.client.aiohttp.ClientSession", return_value=mock_session):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_RESTART,

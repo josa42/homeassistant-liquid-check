@@ -28,7 +28,7 @@ async def test_sensor_coordinator_url(mock_config_entry: MockConfigEntry):
     hass = HomeAssistant("/test")
     coordinator = LiquidCheckDataUpdateCoordinator(hass, mock_config_entry)
     
-    assert coordinator.host == "192.168.1.100"
+    assert coordinator._client._host == "192.168.1.100"
     assert coordinator.update_interval == timedelta(seconds=60)
 
 

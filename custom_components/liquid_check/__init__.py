@@ -3,13 +3,13 @@ from __future__ import annotations
 
 import logging
 
-import aiohttp
-import async_timeout
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
+
+from .client import LiquidCheckClient
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BUTTON]
 DOMAIN = "liquid_check"
@@ -35,7 +35,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Liquid Check from a config entry."""
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     
-    async def send_device_command(device_id: str, payload: dict, action: str) -> None:
+    async def send_device_command(
+        device_id: str, command_name: str, action: str
+    ) -> None:
         """Send a command to the Liquid Check device."""
         config_entry = None
         for entry in hass.config_entries.async_entries(DOMAIN):
@@ -47,55 +49,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.error("Device with ID %s not found", device_id)
             return
         
-        host = config_entry.data["host"]
-        url = f"http://{host}/command"
+        client = LiquidCheckClient(config_entry.data["host"])
         
         try:
-            async with async_timeout.timeout(10):
-                async with aiohttp.ClientSession() as session:
-                    async with session.post(
-                        url,
-                        json=payload,
-                        headers={"Content-Type": "application/json; charset=utf-8"}
-                    ) as response:
-                        if response.status == 200:
-                            _LOGGER.info("%s on device %s", action, host)
-                        else:
-                            _LOGGER.error(
-                                "Failed to %s on device %s: status %s",
-                                action.lower(),
-                                host,
-                                response.status
-                            )
-        except aiohttp.ClientError as err:
-            _LOGGER.error("Error communicating with device %s: %s", host, err)
+            await client.send_command(command_name)
+            _LOGGER.info("%s on device %s", action, config_entry.data["host"])
         except Exception as err:
-            _LOGGER.error("Unexpected error %s on %s: %s", action.lower(), host, err)
-    
-    def create_device_payload(name: str) -> dict:
-        """Create a device control payload with the given command name."""
-        return {
-            "header": {
-                "namespace": "Device.Control",
-                "name": name,
-                "messageId": "1",
-                "payloadVersion": "1"
-            },
-            "payload": None
-        }
+            _LOGGER.error("Error %s on device: %s", action.lower(), err)
     
     async def handle_start_measure(call: ServiceCall) -> None:
         """Handle the start_measure service call."""
-        payload = create_device_payload("StartMeasure")
         await send_device_command(
-            call.data["device_id"], payload, "Measurement started"
+            call.data["device_id"], "StartMeasure", "Measurement started"
         )
     
     async def handle_restart(call: ServiceCall) -> None:
         """Handle the restart service call."""
-        payload = create_device_payload("Restart")
         await send_device_command(
-            call.data["device_id"], payload, "Device restarting"
+            call.data["device_id"], "Restart", "Device restarting"
         )
     
     # Register the services
