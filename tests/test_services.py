@@ -5,16 +5,28 @@ from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 
-async def test_start_measure_service(hass: HomeAssistant, mock_config_entry: MockConfigEntry):
+async def test_start_measure_service(hass: HomeAssistant):
     """Test the start_measure service."""
-    from custom_components.liquid_check import async_setup_entry
+    from custom_components.liquid_check import (
+        DOMAIN,
+        SERVICE_START_MEASURE,
+        async_setup_entry,
+    )
     
-    mock_config_entry.add_to_hass(hass)
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"name": "Test", "host": "192.168.1.100", "scan_interval": 60},
+        entry_id="test123",
+    )
+    mock_entry.add_to_hass(hass)
 
     # Mock the platform forwarding to avoid coordinator threads
     with patch("homeassistant.config_entries.ConfigEntries.async_forward_entry_setups", return_value=None):
-        assert await async_setup_entry(hass, mock_config_entry)
+        assert await async_setup_entry(hass, mock_entry)
         await hass.async_block_till_done()
+
+    # Verify service is registered
+    assert hass.services.has_service(DOMAIN, SERVICE_START_MEASURE)
 
     # Mock the HTTP response
     mock_response = MagicMock()
@@ -29,9 +41,9 @@ async def test_start_measure_service(hass: HomeAssistant, mock_config_entry: Moc
 
     with patch("custom_components.liquid_check.aiohttp.ClientSession", return_value=mock_session):
         await hass.services.async_call(
-            "liquid_check",
-            "start_measure",
-            {"device_id": mock_config_entry.entry_id},
+            DOMAIN,
+            SERVICE_START_MEASURE,
+            {"device_id": mock_entry.entry_id},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -47,33 +59,55 @@ async def test_start_measure_service(hass: HomeAssistant, mock_config_entry: Moc
     assert call_args[1]["headers"]["Content-Type"] == "application/json; charset=utf-8"
 
 
-async def test_start_measure_service_invalid_device(hass: HomeAssistant, mock_config_entry: MockConfigEntry):
+async def test_start_measure_service_invalid_device(hass: HomeAssistant):
     """Test the start_measure service with invalid device ID."""
-    mock_config_entry.add_to_hass(hass)
+    from custom_components.liquid_check import (
+        DOMAIN,
+        SERVICE_START_MEASURE,
+        async_setup_entry,
+    )
     
-    # Set up the integration to register services
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"name": "Test", "host": "192.168.1.100", "scan_interval": 60},
+        entry_id="test123",
+    )
+    mock_entry.add_to_hass(hass)
+    
+    # Mock the platform forwarding
+    with patch("homeassistant.config_entries.ConfigEntries.async_forward_entry_setups", return_value=None):
+        assert await async_setup_entry(hass, mock_entry)
+        await hass.async_block_till_done()
     
     # Call service with non-existent device
     await hass.services.async_call(
-        "liquid_check",
-        "start_measure",
+        DOMAIN,
+        SERVICE_START_MEASURE,
         {"device_id": "nonexistent"},
         blocking=True,
     )
     await hass.async_block_till_done()
 
 
-async def test_start_measure_service_connection_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-):
+async def test_start_measure_service_connection_error(hass: HomeAssistant):
     """Test the start_measure service with connection error."""
-    mock_config_entry.add_to_hass(hass)
+    from custom_components.liquid_check import (
+        DOMAIN,
+        SERVICE_START_MEASURE,
+        async_setup_entry,
+    )
+    
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"name": "Test", "host": "192.168.1.100", "scan_interval": 60},
+        entry_id="test123",
+    )
+    mock_entry.add_to_hass(hass)
 
-    # Set up the integration to register services
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    # Mock the platform forwarding
+    with patch("homeassistant.config_entries.ConfigEntries.async_forward_entry_setups", return_value=None):
+        assert await async_setup_entry(hass, mock_entry)
+        await hass.async_block_till_done()
 
     mock_session = MagicMock()
     mock_session.post = MagicMock(side_effect=Exception("Connection error"))
@@ -82,9 +116,9 @@ async def test_start_measure_service_connection_error(
 
     with patch("custom_components.liquid_check.aiohttp.ClientSession", return_value=mock_session):
         await hass.services.async_call(
-            "liquid_check",
-            "start_measure",
-            {"device_id": mock_config_entry.entry_id},
+            DOMAIN,
+            SERVICE_START_MEASURE,
+            {"device_id": mock_entry.entry_id},
             blocking=True,
         )
         await hass.async_block_till_done()
