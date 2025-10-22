@@ -31,6 +31,7 @@ async def test_start_measure_service(hass: HomeAssistant, mock_config_entry: Moc
             {"device_id": mock_config_entry.entry_id},
             blocking=True,
         )
+        await hass.async_block_till_done()
 
     # Verify the POST request was made with correct parameters
     mock_session.post.assert_called_once()
