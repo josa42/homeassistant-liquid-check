@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Create release archive
         run: |
@@ -21,7 +21,7 @@ jobs:
           zip -r ../liquid_check.zip liquid_check/
 
       - name: Create Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v2.4.1
         with:
           files: liquid_check.zip
           generate_release_notes: true
