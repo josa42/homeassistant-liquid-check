@@ -3,7 +3,11 @@
 [![GitHub Release][releases-shield]][releases]
 [![License][license-shield]](LICENSE)
 
-A Home Assistant integration for monitoring Liquid Check devices. Track liquid levels, pump statistics, WiFi signal strength, and control your device remotely.
+A Home Assistant integration to use the [Liquid-Check](https://liquid-check-info.si-elektronik.de/) sensor in Home Assistant. The Liquid-Check is a liquid level monitoring device manufactured by [SI-Elektronik GmbH](https://www.si-elektronik.de/).
+
+> **Note:** This integration is not affiliated with or endorsed by SI-Elektronik GmbH. It is a community-developed project.
+
+<br><br>
 
 ## Features
 
@@ -14,6 +18,8 @@ A Home Assistant integration for monitoring Liquid Check devices. Track liquid l
 - 🔧 **Remote Control** - Trigger measurements and restart device
 - 🔄 **Configurable Updates** - Set custom polling intervals (default: 60s, or disable automatic polling)
 - 📱 **Full Device Support** - Shows up in Home Assistant devices tab
+
+<br><br>
 
 ## Installation
 
@@ -47,6 +53,8 @@ A Home Assistant integration for monitoring Liquid Check devices. Track liquid l
 2. Restart Home Assistant
 3. Add the integration through Settings → Devices & Services → Add Integration → Liquid Check
 
+<br><br>
+
 ## Configuration
 
 The integration is configured through the Home Assistant UI:
@@ -57,6 +65,8 @@ The integration is configured through the Home Assistant UI:
    - **Name**: Friendly name for your device (e.g., "Water Tank")
    - **IP Address**: Device IP address (e.g., 192.168.1.100)
    - **Scan Interval**: How often to poll the device in seconds (default: 60, set to 0 to disable automatic polling)
+
+<br><br>
 
 ## Sensors
 
@@ -74,6 +84,8 @@ The integration provides 10 sensors:
 | **Error** | Device error status | - |
 | **Firmware** | Firmware version | - |
 | **Measurement Age** | Time since last measurement | s |
+
+<br><br>
 
 ## Services
 
@@ -96,6 +108,8 @@ service: liquid_check.restart
 target:
   device_id: your_device_id
 ```
+
+<br><br>
 
 ## Example Automations
 
@@ -146,31 +160,13 @@ automation:
           device_id: your_device_id
 ```
 
-## Troubleshooting
-
-**Integration not showing in Add Integration:**
-- Restart Home Assistant after installation
-- Check that files are in `config/custom_components/liquid_check/`
-- Check Home Assistant logs for errors
-
-**Cannot connect to device:**
-- Verify the IP address is correct
-- Ensure device is on the same network
-- Check firewall settings
-
-**Sensors show unavailable:**
-- Check device is powered on and connected
-- Verify IP address hasn't changed
-- Check Home Assistant logs for connection errors
-- If scan interval is set to 0, sensors will only update when manually triggered via service calls
-
-**Need more help?**
-- Check [DEV.md](DEV.md) for development setup
-- Open an [issue](https://github.com/josa42/homeassistant-liquid-check/issues)
+<br><br>
 
 ## Development
 
 See [DEV.md](DEV.md) for development setup, testing, and contribution guidelines.
+
+<br><br>
 
 ## License
 
