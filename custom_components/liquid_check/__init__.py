@@ -35,11 +35,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Liquid Check from a config entry."""
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     
-    async def handle_start_measure(call: ServiceCall) -> None:
-        """Handle the start_measure service call."""
-        device_id = call.data["device_id"]
-        
-        # Find the entry with matching device_id
+    async def send_device_command(device_id: str, payload: dict, action: str) -> None:
+        """Send a command to the Liquid Check device."""
         config_entry = None
         for entry in hass.config_entries.async_entries(DOMAIN):
             if entry.entry_id == device_id:
@@ -52,16 +49,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         
         host = config_entry.data["host"]
         url = f"http://{host}/command"
-        
-        payload = {
-            "header": {
-                "namespace": "Device.Control",
-                "name": "StartMeasure",
-                "messageId": "1",
-                "payloadVersion": "1"
-            },
-            "payload": None
-        }
         
         try:
             async with async_timeout.timeout(10):
@@ -72,36 +59,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         headers={"Content-Type": "application/json; charset=utf-8"}
                     ) as response:
                         if response.status == 200:
-                            _LOGGER.info("Measurement started on device %s", host)
+                            _LOGGER.info("%s on device %s", action, host)
                         else:
                             _LOGGER.error(
-                                "Failed to start measurement on device %s: status %s",
+                                "Failed to %s on device %s: status %s",
+                                action.lower(),
                                 host,
                                 response.status
                             )
         except aiohttp.ClientError as err:
             _LOGGER.error("Error communicating with device %s: %s", host, err)
         except Exception as err:
-            _LOGGER.error("Unexpected error starting measurement on %s: %s", host, err)
+            _LOGGER.error("Unexpected error %s on %s: %s", action.lower(), host, err)
+    
+    async def handle_start_measure(call: ServiceCall) -> None:
+        """Handle the start_measure service call."""
+        payload = {
+            "header": {
+                "namespace": "Device.Control",
+                "name": "StartMeasure",
+                "messageId": "1",
+                "payloadVersion": "1"
+            },
+            "payload": None
+        }
+        await send_device_command(
+            call.data["device_id"], payload, "Measurement started"
+        )
     
     async def handle_restart(call: ServiceCall) -> None:
         """Handle the restart service call."""
-        device_id = call.data["device_id"]
-        
-        # Find the entry with matching device_id
-        config_entry = None
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            if entry.entry_id == device_id:
-                config_entry = entry
-                break
-        
-        if not config_entry:
-            _LOGGER.error("Device with ID %s not found", device_id)
-            return
-        
-        host = config_entry.data["host"]
-        url = f"http://{host}/command"
-        
         payload = {
             "header": {
                 "namespace": "Device.Control",
@@ -113,27 +100,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             },
             "payload": None
         }
-        
-        try:
-            async with async_timeout.timeout(10):
-                async with aiohttp.ClientSession() as session:
-                    async with session.post(
-                        url,
-                        json=payload,
-                        headers={"Content-Type": "application/json; charset=utf-8"}
-                    ) as response:
-                        if response.status == 200:
-                            _LOGGER.info("Device %s restarting", host)
-                        else:
-                            _LOGGER.error(
-                                "Failed to restart device %s: status %s",
-                                host,
-                                response.status
-                            )
-        except aiohttp.ClientError as err:
-            _LOGGER.error("Error communicating with device %s: %s", host, err)
-        except Exception as err:
-            _LOGGER.error("Unexpected error restarting device %s: %s", host, err)
+        await send_device_command(
+            call.data["device_id"], payload, "Device restarting"
+        )
     
     # Register the services
     hass.services.async_register(
