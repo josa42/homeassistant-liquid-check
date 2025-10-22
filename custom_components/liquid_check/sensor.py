@@ -133,7 +133,7 @@ class LiquidCheckBaseSensor(CoordinatorEntity, SensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={("liquid_check", entry.entry_id)},
             name=entry.data["name"],
-            manufacturer="Liquid Check",
+            manufacturer="SI-Elektronik GmbH",
             model="Liquid Check Device",
             configuration_url=f"http://{entry.data['host']}",
         )
