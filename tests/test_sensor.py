@@ -41,16 +41,16 @@ async def test_sensor_entities_have_correct_units():
     )
 
     from custom_components.liquid_check.sensor import (
-        LiquidCheckAgeSensor,
         LiquidCheckContentSensor,
         LiquidCheckErrorSensor,
         LiquidCheckFirmwareSensor,
         LiquidCheckLevelSensor,
+        LiquidCheckMeasurementAgeSensor,
         LiquidCheckPercentSensor,
-        LiquidCheckRSSISensor,
-        LiquidCheckTotalRunsSensor,
-        LiquidCheckTotalRuntimeSensor,
+        LiquidCheckPumpTotalRunsSensor,
+        LiquidCheckPumpTotalRuntimeSensor,
         LiquidCheckUptimeSensor,
+        LiquidCheckWiFiRSSISensor,
     )
     
     coordinator = MagicMock()
@@ -91,20 +91,20 @@ async def test_sensor_entities_have_correct_units():
     assert percent_sensor._attr_state_class == "measurement"
     assert percent_sensor.native_value == 42.3
     
-    # Test RSSI sensor
-    rssi_sensor = LiquidCheckRSSISensor(coordinator, entry)
+    # Test WiFi RSSI sensor
+    rssi_sensor = LiquidCheckWiFiRSSISensor(coordinator, entry)
     assert rssi_sensor._attr_device_class == "signal_strength"
     assert rssi_sensor._attr_native_unit_of_measurement == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
     assert rssi_sensor._attr_state_class == "measurement"
     assert rssi_sensor.native_value == -65
     
-    # Test total runs sensor
-    runs_sensor = LiquidCheckTotalRunsSensor(coordinator, entry)
+    # Test pump total runs sensor
+    runs_sensor = LiquidCheckPumpTotalRunsSensor(coordinator, entry)
     assert runs_sensor._attr_state_class == "total_increasing"
     assert runs_sensor.native_value == 1234
     
-    # Test total runtime sensor
-    runtime_sensor = LiquidCheckTotalRuntimeSensor(coordinator, entry)
+    # Test pump total runtime sensor
+    runtime_sensor = LiquidCheckPumpTotalRuntimeSensor(coordinator, entry)
     assert runtime_sensor._attr_device_class == "duration"
     assert runtime_sensor._attr_native_unit_of_measurement == UnitOfTime.SECONDS
     assert runtime_sensor._attr_state_class == "total_increasing"
@@ -125,8 +125,8 @@ async def test_sensor_entities_have_correct_units():
     firmware_sensor = LiquidCheckFirmwareSensor(coordinator, entry)
     assert firmware_sensor.native_value == "1.2.3"
     
-    # Test age sensor
-    age_sensor = LiquidCheckAgeSensor(coordinator, entry)
+    # Test measurement age sensor
+    age_sensor = LiquidCheckMeasurementAgeSensor(coordinator, entry)
     assert age_sensor._attr_device_class == "duration"
     assert age_sensor._attr_native_unit_of_measurement == UnitOfTime.SECONDS
     assert age_sensor._attr_state_class == "measurement"

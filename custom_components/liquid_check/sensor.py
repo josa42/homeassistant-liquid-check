@@ -45,13 +45,13 @@ async def async_setup_entry(
             LiquidCheckLevelSensor(coordinator, entry),
             LiquidCheckContentSensor(coordinator, entry),
             LiquidCheckPercentSensor(coordinator, entry),
-            LiquidCheckRSSISensor(coordinator, entry),
-            LiquidCheckTotalRunsSensor(coordinator, entry),
-            LiquidCheckTotalRuntimeSensor(coordinator, entry),
+            LiquidCheckWiFiRSSISensor(coordinator, entry),
+            LiquidCheckPumpTotalRunsSensor(coordinator, entry),
+            LiquidCheckPumpTotalRuntimeSensor(coordinator, entry),
             LiquidCheckUptimeSensor(coordinator, entry),
             LiquidCheckErrorSensor(coordinator, entry),
             LiquidCheckFirmwareSensor(coordinator, entry),
-            LiquidCheckAgeSensor(coordinator, entry),
+            LiquidCheckMeasurementAgeSensor(coordinator, entry),
         ]
     )
 
@@ -165,8 +165,8 @@ class LiquidCheckPercentSensor(CoordinatorEntity, SensorEntity):
         return None
 
 
-class LiquidCheckRSSISensor(CoordinatorEntity, SensorEntity):
-    """Representation of Liquid Check RSSI Sensor."""
+class LiquidCheckWiFiRSSISensor(CoordinatorEntity, SensorEntity):
+    """Representation of Liquid Check WiFi RSSI Sensor."""
 
     _attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -178,8 +178,8 @@ class LiquidCheckRSSISensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attr_name = f"{entry.data['name']} RSSI"
-        self._attr_unique_id = f"{entry.entry_id}_rssi"
+        self._attr_name = f"{entry.data['name']} WiFi RSSI"
+        self._attr_unique_id = f"{entry.entry_id}_wifi_rssi"
 
     @property
     def native_value(self):
@@ -189,8 +189,8 @@ class LiquidCheckRSSISensor(CoordinatorEntity, SensorEntity):
         return None
 
 
-class LiquidCheckTotalRunsSensor(CoordinatorEntity, SensorEntity):
-    """Representation of Liquid Check Total Runs Sensor."""
+class LiquidCheckPumpTotalRunsSensor(CoordinatorEntity, SensorEntity):
+    """Representation of Liquid Check Pump Total Runs Sensor."""
 
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_entity_registry_enabled_default = False
@@ -200,8 +200,8 @@ class LiquidCheckTotalRunsSensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attr_name = f"{entry.data['name']} Total Runs"
-        self._attr_unique_id = f"{entry.entry_id}_total_runs"
+        self._attr_name = f"{entry.data['name']} Pump Total Runs"
+        self._attr_unique_id = f"{entry.entry_id}_pump_total_runs"
 
     @property
     def native_value(self):
@@ -211,8 +211,8 @@ class LiquidCheckTotalRunsSensor(CoordinatorEntity, SensorEntity):
         return None
 
 
-class LiquidCheckTotalRuntimeSensor(CoordinatorEntity, SensorEntity):
-    """Representation of Liquid Check Total Runtime Sensor."""
+class LiquidCheckPumpTotalRuntimeSensor(CoordinatorEntity, SensorEntity):
+    """Representation of Liquid Check Pump Total Runtime Sensor."""
 
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
@@ -224,8 +224,8 @@ class LiquidCheckTotalRuntimeSensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attr_name = f"{entry.data['name']} Total Runtime"
-        self._attr_unique_id = f"{entry.entry_id}_total_runtime"
+        self._attr_name = f"{entry.data['name']} Pump Total Runtime"
+        self._attr_unique_id = f"{entry.entry_id}_pump_total_runtime"
 
     @property
     def native_value(self):
@@ -301,8 +301,8 @@ class LiquidCheckFirmwareSensor(CoordinatorEntity, SensorEntity):
         return None
 
 
-class LiquidCheckAgeSensor(CoordinatorEntity, SensorEntity):
-    """Representation of Liquid Check Age Sensor."""
+class LiquidCheckMeasurementAgeSensor(CoordinatorEntity, SensorEntity):
+    """Representation of Liquid Check Measurement Age Sensor."""
 
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -314,8 +314,8 @@ class LiquidCheckAgeSensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attr_name = f"{entry.data['name']} Age"
-        self._attr_unique_id = f"{entry.entry_id}_age"
+        self._attr_name = f"{entry.data['name']} Measurement Age"
+        self._attr_unique_id = f"{entry.entry_id}_measurement_age"
 
     @property
     def native_value(self):
