@@ -21,7 +21,7 @@ jobs:
           zip -r ../liquid_check.zip liquid_check/
 
       - name: Create Release
-        uses: softprops/action-gh-release@v2.4.1
+        uses: softprops/action-gh-release@v2
         with:
           files: liquid_check.zip
           generate_release_notes: true
