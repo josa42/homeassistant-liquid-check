@@ -11,8 +11,9 @@ A Home Assistant integration to use the [Liquid-Check](https://liquid-check-info
 
 ## Features
 
-- 🌊 **Liquid Level Monitoring** - Real-time liquid level and temperature measurements
-- 📊 **Pump Statistics** - Track total runs and runtime
+- 🌊 **Liquid Level Monitoring** - Real-time liquid level measurements in non-pressurized containers
+- 📊 **Volume Tracking** - Monitor content in liters and percentage
+- 🔌 **Pump Monitoring** - Track connected pump runs and runtime
 - 📡 **WiFi Signal** - Monitor device connectivity (RSSI)
 - ⏱️ **Uptime Tracking** - Device and measurement age monitoring
 - 🔧 **Remote Control** - Trigger measurements and restart device
@@ -72,18 +73,18 @@ The integration is configured through the Home Assistant UI:
 
 The integration provides 10 sensors:
 
-| Sensor | Description | Unit |
-|--------|-------------|------|
-| **Liquid Level** | Current liquid level | % |
-| **Temperature** | Liquid temperature | °C |
-| **Level** | Measurement value | m |
-| **WiFi RSSI** | WiFi signal strength | dBm |
-| **Pump Total Runs** | Lifetime pump cycles | - |
-| **Pump Total Runtime** | Lifetime pump operation time | min |
-| **Uptime** | Device uptime | s |
-| **Error** | Device error status | - |
-| **Firmware** | Firmware version | - |
-| **Measurement Age** | Time since last measurement | s |
+| Sensor | Description | Unit | Enabled by Default |
+|--------|-------------|------|--------------------|
+| **Level** | Liquid level distance | m | ✓ |
+| **Content** | Liquid volume | L | ✓ |
+| **Percent** | Fill level percentage | % | ✓ |
+| **WiFi RSSI** | WiFi signal strength | dBm | |
+| **Pump Total Runs** | Connected pump total cycles | - | |
+| **Pump Total Runtime** | Connected pump total operation time | s | |
+| **Uptime** | Device uptime | s | |
+| **Error** | Device error status | - | |
+| **Firmware** | Firmware version | - | |
+| **Measurement Age** | Time since last measurement | s | |
 
 <br><br>
 
@@ -120,7 +121,7 @@ automation:
   - alias: "Low Liquid Level Alert"
     trigger:
       - platform: numeric_state
-        entity_id: sensor.water_tank_liquid_level
+        entity_id: sensor.water_tank_percent
         below: 20
     action:
       - service: notify.mobile_app
