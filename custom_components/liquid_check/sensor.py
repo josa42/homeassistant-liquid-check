@@ -161,7 +161,7 @@ class LiquidCheckLevelSensor(LiquidCheckBaseSensor):
 class LiquidCheckContentSensor(LiquidCheckBaseSensor):
     """Representation of Liquid Check Content Sensor."""
 
-    _attr_device_class = SensorDeviceClass.VOLUME
+    _attr_device_class = SensorDeviceClass.VOLUME_STORAGE
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfVolume.LITERS
 

@@ -121,7 +121,7 @@ async def test_sensor_entities_have_correct_units():
     
     # Test content sensor
     content_sensor = LiquidCheckContentSensor(coordinator, entry)
-    assert content_sensor._attr_device_class == "volume"
+    assert content_sensor._attr_device_class == "volume_storage"
     assert content_sensor._attr_native_unit_of_measurement == UnitOfVolume.LITERS
     assert content_sensor._attr_state_class == "measurement"
     assert content_sensor.native_value == 960
@@ -238,3 +238,60 @@ async def test_coordinator_parses_api_response():
     assert result["totalRuntime"] == 43
     assert result["rssi"] == -85
     assert result["firmware"] == "1.91"
+
+
+async def test_sensor_state_classes_are_valid_for_device_class():
+    """Test every sensor uses a state class allowed by its device class.
+
+    Home Assistant rejects impossible combinations at runtime, e.g. device class
+    'volume' with state class 'measurement' (issue #2).
+    """
+    from unittest.mock import MagicMock
+
+    from homeassistant.components.sensor.const import DEVICE_CLASS_STATE_CLASSES
+
+    from custom_components.liquid_check.sensor import (
+        LiquidCheckContentSensor,
+        LiquidCheckErrorSensor,
+        LiquidCheckFirmwareSensor,
+        LiquidCheckLevelSensor,
+        LiquidCheckMeasurementAgeSensor,
+        LiquidCheckPercentSensor,
+        LiquidCheckPumpTotalRunsSensor,
+        LiquidCheckPumpTotalRuntimeSensor,
+        LiquidCheckUptimeSensor,
+        LiquidCheckWiFiRSSISensor,
+    )
+
+    coordinator = MagicMock()
+    coordinator.data = {}
+
+    entry = MagicMock()
+    entry.data = {"name": "Test", "host": "192.168.1.100"}
+    entry.entry_id = "test123"
+
+    sensor_classes = [
+        LiquidCheckLevelSensor,
+        LiquidCheckContentSensor,
+        LiquidCheckPercentSensor,
+        LiquidCheckWiFiRSSISensor,
+        LiquidCheckPumpTotalRunsSensor,
+        LiquidCheckPumpTotalRuntimeSensor,
+        LiquidCheckUptimeSensor,
+        LiquidCheckErrorSensor,
+        LiquidCheckFirmwareSensor,
+        LiquidCheckMeasurementAgeSensor,
+    ]
+
+    for sensor_class in sensor_classes:
+        sensor = sensor_class(coordinator, entry)
+        device_class = sensor.device_class
+        state_class = sensor.state_class
+
+        if device_class is None or state_class is None:
+            continue
+
+        assert state_class in DEVICE_CLASS_STATE_CLASSES[device_class], (
+            f"{sensor_class.__name__} uses state class '{state_class}' which is "
+            f"impossible for device class '{device_class}'"
+        )
