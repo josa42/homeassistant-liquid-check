@@ -1,243 +1,116 @@
 """Test the Liquid Check services."""
-from unittest.mock import AsyncMock, MagicMock, patch
+import json
+from pathlib import Path
+from unittest.mock import AsyncMock, patch
 
+import pytest
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import device_registry as dr
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from custom_components.liquid_check import (
+    DOMAIN,
+    SERVICE_RESTART,
+    SERVICE_START_MEASURE,
+)
 
-async def test_start_measure_service(hass: HomeAssistant):
-    """Test the start_measure service."""
-    from custom_components.liquid_check import (
-        DOMAIN,
-        SERVICE_START_MEASURE,
-        async_setup_entry,
-    )
-    
-    mock_entry = MockConfigEntry(
+API_RESPONSE = json.loads(
+    (Path(__file__).parent / "fixtures" / "api_response.json").read_text()
+)
+
+ENTRY_ID = "test123"
+
+
+@pytest.fixture
+async def device_id(hass: HomeAssistant) -> str:
+    """Set the integration up and return its device registry ID."""
+    entry = MockConfigEntry(
         domain=DOMAIN,
         data={"name": "Test", "host": "192.168.1.100", "scan_interval": 60},
-        entry_id="test123",
+        entry_id=ENTRY_ID,
     )
-    mock_entry.add_to_hass(hass)
+    entry.add_to_hass(hass)
 
-    # Mock the platform forwarding to avoid coordinator threads
-    with patch("homeassistant.config_entries.ConfigEntries.async_forward_entry_setups", return_value=None):
-        assert await async_setup_entry(hass, mock_entry)
+    with patch(
+        "custom_components.liquid_check.client.LiquidCheckClient.get_info",
+        AsyncMock(return_value=API_RESPONSE),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    # Verify service is registered
-    assert hass.services.has_service(DOMAIN, SERVICE_START_MEASURE)
+    devices = dr.async_entries_for_config_entry(dr.async_get(hass), entry.entry_id)
+    assert len(devices) == 1
+    return devices[0].id
 
-    # Mock the HTTP response
-    mock_response = MagicMock()
-    mock_response.status = 200
-    mock_response.__aenter__ = AsyncMock(return_value=mock_response)
-    mock_response.__aexit__ = AsyncMock(return_value=None)
 
-    mock_session = MagicMock()
-    mock_session.post = MagicMock(return_value=mock_response)
-    mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-    mock_session.__aexit__ = AsyncMock(return_value=None)
+@pytest.mark.parametrize(
+    ("service", "command"),
+    [(SERVICE_START_MEASURE, "StartMeasure"), (SERVICE_RESTART, "Restart")],
+)
+async def test_service_sends_command(
+    hass: HomeAssistant, device_id: str, service: str, command: str
+):
+    """Test each service reaches the device behind the given device ID."""
+    assert hass.services.has_service(DOMAIN, service)
 
-    with patch("custom_components.liquid_check.client.aiohttp.ClientSession", return_value=mock_session):
+    send_command = AsyncMock()
+    with patch(
+        "custom_components.liquid_check.client.LiquidCheckClient.send_command",
+        send_command,
+    ):
         await hass.services.async_call(
-            DOMAIN,
-            SERVICE_START_MEASURE,
-            {"device_id": mock_entry.entry_id},
-            blocking=True,
+            DOMAIN, service, {"device_id": device_id}, blocking=True
         )
         await hass.async_block_till_done()
 
-    # Verify the POST request was made with correct parameters
-    mock_session.post.assert_called_once()
-    call_args = mock_session.post.call_args
-    
-    assert call_args[0][0] == "http://192.168.1.100/command"
-    assert call_args[1]["json"]["header"]["namespace"] == "Device.Control"
-    assert call_args[1]["json"]["header"]["name"] == "StartMeasure"
-    assert call_args[1]["json"]["payload"] is None
-    assert call_args[1]["headers"]["Content-Type"] == "application/json; charset=utf-8"
+    send_command.assert_awaited_once_with(command)
 
 
-async def test_start_measure_service_invalid_device(hass: HomeAssistant):
-    """Test the start_measure service with invalid device ID."""
-    from custom_components.liquid_check import (
-        DOMAIN,
-        SERVICE_START_MEASURE,
-        async_setup_entry,
-    )
-    
-    mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"name": "Test", "host": "192.168.1.100", "scan_interval": 60},
-        entry_id="test123",
-    )
-    mock_entry.add_to_hass(hass)
-    
-    # Mock the platform forwarding
-    with patch("homeassistant.config_entries.ConfigEntries.async_forward_entry_setups", return_value=None):
-        assert await async_setup_entry(hass, mock_entry)
-        await hass.async_block_till_done()
-    
-    # Call service with non-existent device
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_START_MEASURE,
-        {"device_id": "nonexistent"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+@pytest.mark.parametrize("service", [SERVICE_START_MEASURE, SERVICE_RESTART])
+async def test_service_rejects_config_entry_id(
+    hass: HomeAssistant, device_id: str, service: str
+):
+    """Test a config entry ID is not accepted as a device ID.
 
+    The device selector hands over a device registry ID. Matching against the
+    config entry ID instead left both services dead from the UI, and the tests
+    passed only because they supplied the entry ID themselves.
+    """
+    assert ENTRY_ID != device_id
 
-async def test_start_measure_service_connection_error(hass: HomeAssistant):
-    """Test the start_measure service with connection error."""
-    from custom_components.liquid_check import (
-        DOMAIN,
-        SERVICE_START_MEASURE,
-        async_setup_entry,
-    )
-    
-    mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"name": "Test", "host": "192.168.1.100", "scan_interval": 60},
-        entry_id="test123",
-    )
-    mock_entry.add_to_hass(hass)
-
-    # Mock the platform forwarding
-    with patch("homeassistant.config_entries.ConfigEntries.async_forward_entry_setups", return_value=None):
-        assert await async_setup_entry(hass, mock_entry)
-        await hass.async_block_till_done()
-
-    mock_session = MagicMock()
-    mock_session.post = MagicMock(side_effect=Exception("Connection error"))
-    mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-    mock_session.__aexit__ = AsyncMock(return_value=None)
-
-    with patch("custom_components.liquid_check.client.aiohttp.ClientSession", return_value=mock_session):
+    send_command = AsyncMock()
+    with patch(
+        "custom_components.liquid_check.client.LiquidCheckClient.send_command",
+        send_command,
+    ), pytest.raises(ServiceValidationError):
         await hass.services.async_call(
-            DOMAIN,
-            SERVICE_START_MEASURE,
-            {"device_id": mock_entry.entry_id},
-            blocking=True,
+            DOMAIN, service, {"device_id": ENTRY_ID}, blocking=True
         )
-        await hass.async_block_till_done()
+
+    send_command.assert_not_awaited()
 
 
-async def test_restart_service(hass: HomeAssistant):
-    """Test the restart service."""
-    from custom_components.liquid_check import (
-        DOMAIN,
-        SERVICE_RESTART,
-        async_setup_entry,
-    )
-    
-    mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"name": "Test", "host": "192.168.1.100", "scan_interval": 60},
-        entry_id="test123",
-    )
-    mock_entry.add_to_hass(hass)
-
-    # Mock the platform forwarding to avoid coordinator threads
-    with patch("homeassistant.config_entries.ConfigEntries.async_forward_entry_setups", return_value=None):
-        assert await async_setup_entry(hass, mock_entry)
-        await hass.async_block_till_done()
-
-    # Verify service is registered
-    assert hass.services.has_service(DOMAIN, SERVICE_RESTART)
-
-    # Mock the HTTP response
-    mock_response = MagicMock()
-    mock_response.status = 200
-    mock_response.__aenter__ = AsyncMock(return_value=mock_response)
-    mock_response.__aexit__ = AsyncMock(return_value=None)
-
-    mock_session = MagicMock()
-    mock_session.post = MagicMock(return_value=mock_response)
-    mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-    mock_session.__aexit__ = AsyncMock(return_value=None)
-
-    with patch("custom_components.liquid_check.client.aiohttp.ClientSession", return_value=mock_session):
+@pytest.mark.parametrize("service", [SERVICE_START_MEASURE, SERVICE_RESTART])
+async def test_service_rejects_unknown_device(
+    hass: HomeAssistant, device_id: str, service: str
+):
+    """Test an unknown device ID raises instead of failing silently."""
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
-            DOMAIN,
-            SERVICE_RESTART,
-            {"device_id": mock_entry.entry_id},
-            blocking=True,
+            DOMAIN, service, {"device_id": "does-not-exist"}, blocking=True
         )
-        await hass.async_block_till_done()
-
-    # Verify the POST request was made with correct parameters
-    mock_session.post.assert_called_once()
-    call_args = mock_session.post.call_args
-    
-    assert call_args[0][0] == "http://192.168.1.100/command"
-    assert call_args[1]["json"]["header"]["namespace"] == "Device.Control"
-    assert call_args[1]["json"]["header"]["name"] == "Restart"
-    assert call_args[1]["json"]["payload"] is None
-    assert call_args[1]["headers"]["Content-Type"] == "application/json; charset=utf-8"
 
 
-async def test_restart_service_invalid_device(hass: HomeAssistant):
-    """Test the restart service with invalid device ID."""
-    from custom_components.liquid_check import (
-        DOMAIN,
-        SERVICE_RESTART,
-        async_setup_entry,
-    )
-    
-    mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"name": "Test", "host": "192.168.1.100", "scan_interval": 60},
-        entry_id="test123",
-    )
-    mock_entry.add_to_hass(hass)
-    
-    # Mock the platform forwarding
-    with patch("homeassistant.config_entries.ConfigEntries.async_forward_entry_setups", return_value=None):
-        assert await async_setup_entry(hass, mock_entry)
-        await hass.async_block_till_done()
-    
-    # Call service with non-existent device
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_RESTART,
-        {"device_id": "nonexistent"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-
-async def test_restart_service_connection_error(hass: HomeAssistant):
-    """Test the restart service with connection error."""
-    from custom_components.liquid_check import (
-        DOMAIN,
-        SERVICE_RESTART,
-        async_setup_entry,
-    )
-    
-    mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"name": "Test", "host": "192.168.1.100", "scan_interval": 60},
-        entry_id="test123",
-    )
-    mock_entry.add_to_hass(hass)
-
-    # Mock the platform forwarding
-    with patch("homeassistant.config_entries.ConfigEntries.async_forward_entry_setups", return_value=None):
-        assert await async_setup_entry(hass, mock_entry)
-        await hass.async_block_till_done()
-
-    mock_session = MagicMock()
-    mock_session.post = MagicMock(side_effect=Exception("Connection error"))
-    mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-    mock_session.__aexit__ = AsyncMock(return_value=None)
-
-    with patch("custom_components.liquid_check.client.aiohttp.ClientSession", return_value=mock_session):
+@pytest.mark.parametrize("service", [SERVICE_START_MEASURE, SERVICE_RESTART])
+async def test_service_surfaces_connection_failure(
+    hass: HomeAssistant, device_id: str, service: str
+):
+    """Test an unreachable device fails the call rather than logging quietly."""
+    with patch(
+        "custom_components.liquid_check.client.LiquidCheckClient.send_command",
+        AsyncMock(side_effect=OSError("Connection refused")),
+    ), pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            DOMAIN,
-            SERVICE_RESTART,
-            {"device_id": mock_entry.entry_id},
-            blocking=True,
+            DOMAIN, service, {"device_id": device_id}, blocking=True
         )
-        await hass.async_block_till_done()

@@ -67,6 +67,14 @@
       }
     }
   },
+  "exceptions": {
+    "device_not_found": {
+      "message": "No Liquid Check device found with ID {device_id}."
+    },
+    "command_failed": {
+      "message": "Could not reach the Liquid Check device at {host}."
+    }
+  },
   "services": {
     "restart": {
       "name": "Restart device",

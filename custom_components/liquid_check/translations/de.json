@@ -67,6 +67,14 @@
       }
     }
   },
+  "exceptions": {
+    "device_not_found": {
+      "message": "Kein Liquid-Check-Gerät mit der ID {device_id} gefunden."
+    },
+    "command_failed": {
+      "message": "Das Liquid-Check-Gerät unter {host} ist nicht erreichbar."
+    }
+  },
   "services": {
     "restart": {
       "name": "Gerät neu starten",

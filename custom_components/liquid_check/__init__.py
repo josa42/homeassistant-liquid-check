@@ -7,7 +7,9 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import device_registry as dr
 
 from .client import LiquidCheckClient
 from .const import DOMAIN
@@ -31,6 +33,26 @@ SERVICE_RESTART_SCHEMA = vol.Schema(
 )
 
 
+def _config_entry_for_device(hass: HomeAssistant, device_id: str) -> ConfigEntry:
+    """Return the config entry backing a device registry ID.
+
+    Service calls carry the device registry ID handed over by the device
+    selector, which is not the config entry ID.
+    """
+    device = dr.async_get(hass).async_get(device_id)
+    if device is not None:
+        for entry_id in device.config_entries:
+            config_entry = hass.config_entries.async_get_entry(entry_id)
+            if config_entry is not None and config_entry.domain == DOMAIN:
+                return config_entry
+
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="device_not_found",
+        translation_placeholders={"device_id": device_id},
+    )
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Liquid Check from a config entry."""
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -39,23 +61,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device_id: str, command_name: str, action: str
     ) -> None:
         """Send a command to the Liquid Check device."""
-        config_entry = None
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            if entry.entry_id == device_id:
-                config_entry = entry
-                break
-        
-        if not config_entry:
-            _LOGGER.error("Device with ID %s not found", device_id)
-            return
-        
+        config_entry = _config_entry_for_device(hass, device_id)
         client = LiquidCheckClient(config_entry.data["host"])
         
         try:
             await client.send_command(command_name)
             _LOGGER.info("%s on device %s", action, config_entry.data["host"])
         except Exception as err:
-            _LOGGER.error("Error %s on device: %s", action.lower(), err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"host": config_entry.data["host"]},
+            ) from err
     
     async def handle_start_measure(call: ServiceCall) -> None:
         """Handle the start_measure service call."""
