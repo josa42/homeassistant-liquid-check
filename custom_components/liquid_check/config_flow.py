@@ -37,11 +37,15 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             raise InvalidHost
     
     try:
-        await LiquidCheckClient(host).get_info()
+        info = await LiquidCheckClient(host).get_info()
     except Exception as err:
         raise CannotConnect from err
     
-    return {"title": data["name"]}
+    # The device reports a stable UUID. Fall back to the host so that a device
+    # that does not report one still cannot be added twice at the same address.
+    device = info.get("payload", {}).get("device", {})
+    
+    return {"title": data["name"], "unique_id": device.get("uuid") or host}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain="liquid_check"):
@@ -64,6 +68,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain="liquid_check"):
             except Exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
             else:
+                await self.async_set_unique_id(info["unique_id"])
+                self._abort_if_unique_id_configured(
+                    updates={"host": user_input["host"].strip()}
+                )
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
