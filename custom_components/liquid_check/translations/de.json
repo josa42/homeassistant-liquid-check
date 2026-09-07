@@ -25,6 +25,12 @@
       "already_configured": "Gerät ist bereits konfiguriert"
     }
   },
+  "device_automation": {
+    "action_type": {
+      "restart": "Gerät neu starten",
+      "start_measure": "Messung starten"
+    }
+  },
   "entity": {
     "button": {
       "restart": {
