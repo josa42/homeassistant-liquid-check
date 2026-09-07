@@ -9,6 +9,11 @@ pytest_plugins = "pytest_homeassistant_custom_component"  # noqa: E402
 
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # noqa: E402
 
+# Home Assistant's loader only finds the integration once custom_components has
+# been imported. Doing it here keeps every test module independent of the order
+# pytest happens to collect them in.
+import custom_components.liquid_check  # noqa: E402,F401
+
 
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
