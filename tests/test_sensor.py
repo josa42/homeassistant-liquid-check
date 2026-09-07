@@ -23,12 +23,14 @@ async def test_sensor_coordinator_url(mock_config_entry: MockConfigEntry):
 
     from homeassistant.core import HomeAssistant
 
-    from custom_components.liquid_check.sensor import LiquidCheckDataUpdateCoordinator
+    from custom_components.liquid_check.coordinator import (
+        LiquidCheckDataUpdateCoordinator,
+    )
     
     hass = HomeAssistant("/test")
     coordinator = LiquidCheckDataUpdateCoordinator(hass, mock_config_entry)
     
-    assert coordinator._client._host == "192.168.1.100"
+    assert coordinator.client._host == "192.168.1.100"
     assert coordinator.update_interval == timedelta(seconds=60)
 
 
@@ -39,7 +41,9 @@ async def test_sensor_coordinator_custom_interval():
     from homeassistant.core import HomeAssistant
     from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-    from custom_components.liquid_check.sensor import LiquidCheckDataUpdateCoordinator
+    from custom_components.liquid_check.coordinator import (
+        LiquidCheckDataUpdateCoordinator,
+    )
     
     entry = MockConfigEntry(
         domain="liquid_check",
@@ -57,7 +61,9 @@ async def test_sensor_coordinator_zero_interval_disables_polling():
     from homeassistant.core import HomeAssistant
     from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-    from custom_components.liquid_check.sensor import LiquidCheckDataUpdateCoordinator
+    from custom_components.liquid_check.coordinator import (
+        LiquidCheckDataUpdateCoordinator,
+    )
     
     entry = MockConfigEntry(
         domain="liquid_check",
@@ -197,7 +203,9 @@ async def test_coordinator_parses_api_response(hass: HomeAssistant):
     from pathlib import Path
     from unittest.mock import AsyncMock, MagicMock, patch
 
-    from custom_components.liquid_check.sensor import LiquidCheckDataUpdateCoordinator
+    from custom_components.liquid_check.coordinator import (
+        LiquidCheckDataUpdateCoordinator,
+    )
 
     # Load the fixture
     fixture_path = Path(__file__).parent / "fixtures" / "api_response.json"
