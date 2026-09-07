@@ -73,12 +73,39 @@ async def test_every_entity_has_a_translated_name():
             )
 
 
-async def test_translations_match_strings():
-    """Test translations/en.json carries the same entity keys as strings.json."""
-    strings = _load("strings.json")["entity"]
-    english = _load("translations/en.json")["entity"]
+def _key_paths(value, prefix: str = "") -> set[str]:
+    """Collect the dotted path of every leaf key in a nested dict."""
+    if not isinstance(value, dict):
+        return {prefix}
+    return {
+        path
+        for key, child in value.items()
+        for path in _key_paths(child, f"{prefix}.{key}" if prefix else key)
+    }
 
-    assert strings == english
+
+async def test_english_translations_match_strings():
+    """Test translations/en.json is a verbatim copy of strings.json."""
+    assert _load("strings.json") == _load("translations/en.json")
+
+
+async def test_every_translation_covers_all_keys():
+    """Test each translation file defines exactly the keys strings.json declares.
+
+    A missing key silently falls back to English, and a stale extra key hides a
+    string that was renamed or removed.
+    """
+    expected = _key_paths(_load("strings.json"))
+
+    for path in sorted((COMPONENT_DIR / "translations").glob("*.json")):
+        actual = _key_paths(_load(f"translations/{path.name}"))
+
+        assert not expected - actual, (
+            f"{path.name} is missing: {sorted(expected - actual)}"
+        )
+        assert not actual - expected, (
+            f"{path.name} has keys not in strings.json: {sorted(actual - expected)}"
+        )
 
 
 async def test_icons_reference_known_translation_keys():

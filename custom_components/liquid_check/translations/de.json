@@ -1,0 +1,92 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Liquid Check einrichten",
+        "description": "Liquid-Check-Gerät konfigurieren",
+        "data": {
+          "name": "Gerätename",
+          "host": "Host oder IP-Adresse",
+          "scan_interval": "Abfrageintervall (Sekunden)"
+        },
+        "data_description": {
+          "name": "Ein Anzeigename für dieses Gerät",
+          "host": "Die IP-Adresse oder der Hostname des Liquid-Check-Geräts",
+          "scan_interval": "Wie oft Daten vom Gerät abgerufen werden (0 deaktiviert die automatische Abfrage, 1-3600 Sekunden, Standard: 60)"
+        }
+      }
+    },
+    "error": {
+      "invalid_host": "Ungültige IP-Adresse oder ungültiger Hostname",
+      "cannot_connect": "Verbindung zum Gerät fehlgeschlagen",
+      "unknown": "Unerwarteter Fehler aufgetreten"
+    },
+    "abort": {
+      "already_configured": "Gerät ist bereits konfiguriert"
+    }
+  },
+  "entity": {
+    "button": {
+      "restart": {
+        "name": "Neu starten"
+      },
+      "start_measurement": {
+        "name": "Messung starten"
+      }
+    },
+    "sensor": {
+      "content": {
+        "name": "Füllmenge"
+      },
+      "error": {
+        "name": "Fehler"
+      },
+      "firmware": {
+        "name": "Firmware"
+      },
+      "level": {
+        "name": "Füllhöhe"
+      },
+      "measurement_age": {
+        "name": "Alter der Messung"
+      },
+      "percent": {
+        "name": "Füllstand"
+      },
+      "pump_total_runs": {
+        "name": "Pumpenläufe gesamt"
+      },
+      "pump_total_runtime": {
+        "name": "Pumpenlaufzeit gesamt"
+      },
+      "uptime": {
+        "name": "Betriebszeit"
+      },
+      "wifi_rssi": {
+        "name": "WLAN-Signalstärke"
+      }
+    }
+  },
+  "services": {
+    "restart": {
+      "name": "Gerät neu starten",
+      "description": "Startet das Liquid-Check-Gerät neu.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Das Gerät, das neu gestartet werden soll."
+        }
+      }
+    },
+    "start_measure": {
+      "name": "Messung starten",
+      "description": "Löst eine neue Messung am Liquid-Check-Gerät aus.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Das Gerät, an dem die Messung ausgelöst werden soll."
+        }
+      }
+    }
+  }
+}

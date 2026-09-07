@@ -66,5 +66,27 @@
         "name": "WiFi RSSI"
       }
     }
+  },
+  "services": {
+    "restart": {
+      "name": "Restart device",
+      "description": "Restarts the Liquid Check device.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The device to restart."
+        }
+      }
+    },
+    "start_measure": {
+      "name": "Start measurement",
+      "description": "Triggers a new measurement on the Liquid Check device.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The device to trigger the measurement on."
+        }
+      }
+    }
   }
 }
