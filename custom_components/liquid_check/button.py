@@ -41,9 +41,10 @@ class LiquidCheckBaseButton(ButtonEntity):
         self._client = LiquidCheckClient(entry.data["host"])
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
-            name="Liquid-Check",
+            name=entry.data["name"],
             manufacturer="SI-Elektronik GmbH",
             model="Liquid-Check",
+            configuration_url=f"http://{entry.data['host']}",
         )
 
     async def _send_command(self, command_name: str) -> None:
@@ -54,8 +55,7 @@ class LiquidCheckBaseButton(ButtonEntity):
 class LiquidCheckStartMeasureButton(LiquidCheckBaseButton):
     """Button to start a measurement."""
 
-    _attr_name = "Start measurement"
-    _attr_icon = "mdi:play"
+    _attr_translation_key = "start_measurement"
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the button."""
@@ -70,8 +70,7 @@ class LiquidCheckStartMeasureButton(LiquidCheckBaseButton):
 class LiquidCheckRestartButton(LiquidCheckBaseButton):
     """Button to restart the device."""
 
-    _attr_name = "Restart"
-    _attr_icon = "mdi:restart"
+    _attr_translation_key = "restart"
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the button."""

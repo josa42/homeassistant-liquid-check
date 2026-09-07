@@ -1,0 +1,46 @@
+{
+  "entity": {
+    "button": {
+      "restart": {
+        "default": "mdi:restart"
+      },
+      "start_measurement": {
+        "default": "mdi:play"
+      }
+    },
+    "sensor": {
+      "error": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "firmware": {
+        "default": "mdi:chip"
+      },
+      "level": {
+        "default": "mdi:waves-arrow-up"
+      },
+      "measurement_age": {
+        "default": "mdi:clock-outline"
+      },
+      "percent": {
+        "default": "mdi:gauge"
+      },
+      "pump_total_runs": {
+        "default": "mdi:pump"
+      },
+      "pump_total_runtime": {
+        "default": "mdi:timer-play-outline"
+      },
+      "uptime": {
+        "default": "mdi:timer-outline"
+      }
+    }
+  },
+  "services": {
+    "restart": {
+      "service": "mdi:restart"
+    },
+    "start_measure": {
+      "service": "mdi:play"
+    }
+  }
+}

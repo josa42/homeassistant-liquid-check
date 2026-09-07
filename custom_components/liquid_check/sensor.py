@@ -122,6 +122,8 @@ class LiquidCheckDataUpdateCoordinator(DataUpdateCoordinator):
 class LiquidCheckBaseSensor(CoordinatorEntity, SensorEntity):
     """Base class for Liquid Check sensors."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self, coordinator: LiquidCheckDataUpdateCoordinator, entry: ConfigEntry
     ) -> None:
@@ -140,6 +142,7 @@ class LiquidCheckBaseSensor(CoordinatorEntity, SensorEntity):
 class LiquidCheckLevelSensor(LiquidCheckBaseSensor):
     """Representation of Liquid Check Level Sensor."""
 
+    _attr_translation_key = "level"
     _attr_device_class = SensorDeviceClass.DISTANCE
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfLength.METERS
@@ -149,7 +152,6 @@ class LiquidCheckLevelSensor(LiquidCheckBaseSensor):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, entry)
-        self._attr_name = f"{entry.data['name']} Level"
         self._attr_unique_id = f"{entry.entry_id}_level"
 
     @property
@@ -163,6 +165,7 @@ class LiquidCheckLevelSensor(LiquidCheckBaseSensor):
 class LiquidCheckContentSensor(LiquidCheckBaseSensor):
     """Representation of Liquid Check Content Sensor."""
 
+    _attr_translation_key = "content"
     _attr_device_class = SensorDeviceClass.VOLUME_STORAGE
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfVolume.LITERS
@@ -172,7 +175,6 @@ class LiquidCheckContentSensor(LiquidCheckBaseSensor):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, entry)
-        self._attr_name = f"{entry.data['name']} Content"
         self._attr_unique_id = f"{entry.entry_id}_content"
 
     @property
@@ -186,6 +188,7 @@ class LiquidCheckContentSensor(LiquidCheckBaseSensor):
 class LiquidCheckPercentSensor(LiquidCheckBaseSensor):
     """Representation of Liquid Check Percent Sensor."""
 
+    _attr_translation_key = "percent"
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = PERCENTAGE
 
@@ -194,7 +197,6 @@ class LiquidCheckPercentSensor(LiquidCheckBaseSensor):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, entry)
-        self._attr_name = f"{entry.data['name']} Percent"
         self._attr_unique_id = f"{entry.entry_id}_percent"
 
     @property
@@ -208,6 +210,7 @@ class LiquidCheckPercentSensor(LiquidCheckBaseSensor):
 class LiquidCheckWiFiRSSISensor(LiquidCheckBaseSensor):
     """Representation of Liquid Check WiFi RSSI Sensor."""
 
+    _attr_translation_key = "wifi_rssi"
     _attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
@@ -218,7 +221,6 @@ class LiquidCheckWiFiRSSISensor(LiquidCheckBaseSensor):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, entry)
-        self._attr_name = f"{entry.data['name']} WiFi RSSI"
         self._attr_unique_id = f"{entry.entry_id}_wifi_rssi"
 
     @property
@@ -232,6 +234,7 @@ class LiquidCheckWiFiRSSISensor(LiquidCheckBaseSensor):
 class LiquidCheckPumpTotalRunsSensor(LiquidCheckBaseSensor):
     """Representation of Liquid Check Pump Total Runs Sensor."""
 
+    _attr_translation_key = "pump_total_runs"
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_entity_registry_enabled_default = False
 
@@ -240,7 +243,6 @@ class LiquidCheckPumpTotalRunsSensor(LiquidCheckBaseSensor):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, entry)
-        self._attr_name = f"{entry.data['name']} Pump Total Runs"
         self._attr_unique_id = f"{entry.entry_id}_pump_total_runs"
 
     @property
@@ -254,6 +256,7 @@ class LiquidCheckPumpTotalRunsSensor(LiquidCheckBaseSensor):
 class LiquidCheckPumpTotalRuntimeSensor(LiquidCheckBaseSensor):
     """Representation of Liquid Check Pump Total Runtime Sensor."""
 
+    _attr_translation_key = "pump_total_runtime"
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_native_unit_of_measurement = UnitOfTime.SECONDS
@@ -264,7 +267,6 @@ class LiquidCheckPumpTotalRuntimeSensor(LiquidCheckBaseSensor):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, entry)
-        self._attr_name = f"{entry.data['name']} Pump Total Runtime"
         self._attr_unique_id = f"{entry.entry_id}_pump_total_runtime"
 
     @property
@@ -278,6 +280,7 @@ class LiquidCheckPumpTotalRuntimeSensor(LiquidCheckBaseSensor):
 class LiquidCheckUptimeSensor(LiquidCheckBaseSensor):
     """Representation of Liquid Check Uptime Sensor."""
 
+    _attr_translation_key = "uptime"
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_native_unit_of_measurement = UnitOfTime.SECONDS
@@ -288,7 +291,6 @@ class LiquidCheckUptimeSensor(LiquidCheckBaseSensor):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, entry)
-        self._attr_name = f"{entry.data['name']} Uptime"
         self._attr_unique_id = f"{entry.entry_id}_uptime"
 
     @property
@@ -302,6 +304,7 @@ class LiquidCheckUptimeSensor(LiquidCheckBaseSensor):
 class LiquidCheckErrorSensor(LiquidCheckBaseSensor):
     """Representation of Liquid Check Error Sensor."""
 
+    _attr_translation_key = "error"
     _attr_entity_registry_enabled_default = False
 
     def __init__(
@@ -309,7 +312,6 @@ class LiquidCheckErrorSensor(LiquidCheckBaseSensor):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, entry)
-        self._attr_name = f"{entry.data['name']} Error"
         self._attr_unique_id = f"{entry.entry_id}_error"
 
     @property
@@ -323,6 +325,7 @@ class LiquidCheckErrorSensor(LiquidCheckBaseSensor):
 class LiquidCheckFirmwareSensor(LiquidCheckBaseSensor):
     """Representation of Liquid Check Firmware Sensor."""
 
+    _attr_translation_key = "firmware"
     _attr_entity_registry_enabled_default = False
 
     def __init__(
@@ -330,7 +333,6 @@ class LiquidCheckFirmwareSensor(LiquidCheckBaseSensor):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, entry)
-        self._attr_name = f"{entry.data['name']} Firmware"
         self._attr_unique_id = f"{entry.entry_id}_firmware"
 
     @property
@@ -344,6 +346,7 @@ class LiquidCheckFirmwareSensor(LiquidCheckBaseSensor):
 class LiquidCheckMeasurementAgeSensor(LiquidCheckBaseSensor):
     """Representation of Liquid Check Measurement Age Sensor."""
 
+    _attr_translation_key = "measurement_age"
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfTime.SECONDS
@@ -354,7 +357,6 @@ class LiquidCheckMeasurementAgeSensor(LiquidCheckBaseSensor):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, entry)
-        self._attr_name = f"{entry.data['name']} Measurement Age"
         self._attr_unique_id = f"{entry.entry_id}_measurement_age"
 
     @property

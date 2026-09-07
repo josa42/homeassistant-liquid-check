@@ -24,5 +24,47 @@
     "abort": {
       "already_configured": "Device is already configured"
     }
+  },
+  "entity": {
+    "button": {
+      "restart": {
+        "name": "Restart"
+      },
+      "start_measurement": {
+        "name": "Start measurement"
+      }
+    },
+    "sensor": {
+      "content": {
+        "name": "Content"
+      },
+      "error": {
+        "name": "Error"
+      },
+      "firmware": {
+        "name": "Firmware"
+      },
+      "level": {
+        "name": "Level"
+      },
+      "measurement_age": {
+        "name": "Measurement age"
+      },
+      "percent": {
+        "name": "Percent"
+      },
+      "pump_total_runs": {
+        "name": "Pump total runs"
+      },
+      "pump_total_runtime": {
+        "name": "Pump total runtime"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "wifi_rssi": {
+        "name": "WiFi RSSI"
+      }
+    }
   }
 }
