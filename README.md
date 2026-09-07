@@ -19,6 +19,7 @@ A Home Assistant integration to use the [Liquid-Check](https://liquid-check-info
 - 🔧 **Remote Control** - Trigger measurements and restart device
 - 🔄 **Configurable Updates** - Set custom polling intervals (default: 60s, or disable automatic polling)
 - 📱 **Full Device Support** - Shows up in Home Assistant devices tab
+- 🌍 **Translations** - English and German
 
 <br><br>
 
@@ -67,6 +68,10 @@ The integration is configured through the Home Assistant UI:
    - **IP Address**: Device IP address (e.g., 192.168.1.100)
    - **Scan Interval**: How often to poll the device in seconds (default: 60, set to 0 to disable automatic polling)
 
+The scan interval can be changed later under **Settings** → **Devices & Services**
+→ **Liquid Check** → **Configure**. If the device moves to a new IP address, add
+it again with the new address and the existing device is updated in place.
+
 <br><br>
 
 ## Sensors
@@ -79,25 +84,34 @@ The integration provides 10 sensors:
 | **Content** | Liquid volume | L | ✓ |
 | **Percent** | Fill level percentage | % | ✓ |
 | **WiFi RSSI** | WiFi signal strength | dBm | |
-| **Pump Total Runs** | Connected pump total cycles | - | |
-| **Pump Total Runtime** | Connected pump total operation time | s | |
+| **Pump total runs** | Connected pump total cycles | - | |
+| **Pump total runtime** | Connected pump total operation time | s | |
 | **Uptime** | Device uptime | s | |
 | **Error** | Device error status | - | |
 | **Firmware** | Firmware version | - | |
-| **Measurement Age** | Time since last measurement | s | |
+| **Measurement age** | Time since last measurement | s | |
+
+The seven sensors that are off by default are diagnostic. Enable the ones you
+want under the device page. Firmware and hardware revision are also shown on the
+device itself, so you only need the firmware sensor if you template against it.
 
 <br><br>
 
 ## Services
+
+Both services take the device ID of your Liquid Check. Pick the device from the
+dropdown under **Developer Tools** → **Actions** and switch to YAML mode to see
+the ID, or use the device actions on the automation editor's device page, which
+fill it in for you.
 
 ### Start Measurement
 
 Trigger a new measurement on the device.
 
 ```yaml
-service: liquid_check.start_measure
-target:
-  device_id: your_device_id
+action: liquid_check.start_measure
+data:
+  device_id: 5d6b2f28d240e1bf33238cc013bb578c
 ```
 
 ### Restart Device
@@ -105,9 +119,9 @@ target:
 Restart the Liquid Check device remotely.
 
 ```yaml
-service: liquid_check.restart
-target:
-  device_id: your_device_id
+action: liquid_check.restart
+data:
+  device_id: 5d6b2f28d240e1bf33238cc013bb578c
 ```
 
 <br><br>
@@ -124,7 +138,7 @@ automation:
         entity_id: sensor.water_tank_percent
         below: 20
     action:
-      - service: notify.mobile_app
+      - action: notify.mobile_app
         data:
           message: "Water tank level is below 20%!"
 ```
@@ -138,9 +152,9 @@ automation:
       - platform: time
         at: "08:00:00"
     action:
-      - service: liquid_check.start_measure
-        target:
-          device_id: your_device_id
+      - action: liquid_check.start_measure
+        data:
+          device_id: 5d6b2f28d240e1bf33238cc013bb578c
 ```
 
 ### Weekly Device Restart
@@ -156,9 +170,9 @@ automation:
         weekday:
           - sun
     action:
-      - service: liquid_check.restart
-        target:
-          device_id: your_device_id
+      - action: liquid_check.restart
+        data:
+          device_id: 5d6b2f28d240e1bf33238cc013bb578c
 ```
 
 <br><br>

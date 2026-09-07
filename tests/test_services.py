@@ -114,3 +114,40 @@ async def test_service_surfaces_connection_failure(
         await hass.services.async_call(
             DOMAIN, service, {"device_id": device_id}, blocking=True
         )
+
+
+async def test_documented_yaml_form_reaches_the_device(
+    hass: HomeAssistant, device_id: str
+):
+    """Test the call shape the README documents actually works.
+
+    The README used to show device_id under `target:`, which never reached the
+    service because device_id is declared as a field, not a target.
+    """
+    from homeassistant.setup import async_setup_component
+
+    send_command = AsyncMock()
+    with patch(
+        "custom_components.liquid_check.client.LiquidCheckClient.send_command",
+        send_command,
+    ):
+        assert await async_setup_component(
+            hass,
+            "script",
+            {
+                "script": {
+                    "measure": {
+                        "sequence": [
+                            {
+                                "action": "liquid_check.start_measure",
+                                "data": {"device_id": device_id},
+                            }
+                        ]
+                    }
+                }
+            },
+        )
+        await hass.services.async_call("script", "measure", blocking=True)
+        await hass.async_block_till_done()
+
+    send_command.assert_awaited_once_with("StartMeasure")
