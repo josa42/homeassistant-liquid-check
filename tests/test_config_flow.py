@@ -1,10 +1,16 @@
 """Test the Liquid Check config flow."""
-from unittest.mock import patch
+import json
+from pathlib import Path
+from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.core import HomeAssistant
 
-from custom_components.liquid_check.config_flow import CannotConnect
+API_RESPONSE = json.loads(
+    (Path(__file__).parent / "fixtures" / "api_response.json").read_text()
+)
+
+GET_INFO = "custom_components.liquid_check.client.LiquidCheckClient.get_info"
 
 
 async def test_form(hass: HomeAssistant):
@@ -15,7 +21,7 @@ async def test_form(hass: HomeAssistant):
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
+    with patch(GET_INFO, AsyncMock(return_value=API_RESPONSE)), patch(
         "custom_components.liquid_check.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -49,15 +55,12 @@ async def test_form_invalid_host(hass: HomeAssistant):
 
 
 async def test_form_cannot_connect(hass: HomeAssistant):
-    """Test we handle cannot connect error."""
+    """Test a device that does not answer is reported, not accepted."""
     result = await hass.config_entries.flow.async_init(
         "liquid_check", context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "custom_components.liquid_check.config_flow.validate_input",
-        side_effect=CannotConnect,
-    ):
+    with patch(GET_INFO, AsyncMock(side_effect=OSError("Connection refused"))):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"name": "Test Device", "host": "192.168.1.100"},
@@ -94,7 +97,7 @@ async def test_form_with_custom_scan_interval(hass: HomeAssistant):
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
+    with patch(GET_INFO, AsyncMock(return_value=API_RESPONSE)), patch(
         "custom_components.liquid_check.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:

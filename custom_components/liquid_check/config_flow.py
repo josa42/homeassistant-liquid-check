@@ -10,6 +10,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
+from .client import LiquidCheckClient
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required("name"): str,
@@ -34,8 +36,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         if not host or " " in host:
             raise InvalidHost
     
-    # TODO: Add actual device connection test here
-    # For now, we just validate the format
+    try:
+        await LiquidCheckClient(host).get_info()
+    except Exception as err:
+        raise CannotConnect from err
     
     return {"title": data["name"]}
 
