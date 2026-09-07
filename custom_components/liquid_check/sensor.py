@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UnitOfLength,
     UnitOfTime,
     UnitOfVolume,
 )
@@ -26,6 +27,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .client import LiquidCheckClient
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -127,7 +129,7 @@ class LiquidCheckBaseSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self._entry = entry
         self._attr_device_info = DeviceInfo(
-            identifiers={("liquid_check", entry.entry_id)},
+            identifiers={(DOMAIN, entry.entry_id)},
             name=entry.data["name"],
             manufacturer="SI-Elektronik GmbH",
             model="Liquid-Check",
@@ -140,7 +142,7 @@ class LiquidCheckLevelSensor(LiquidCheckBaseSensor):
 
     _attr_device_class = SensorDeviceClass.DISTANCE
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = "m"
+    _attr_native_unit_of_measurement = UnitOfLength.METERS
 
     def __init__(
         self, coordinator: LiquidCheckDataUpdateCoordinator, entry: ConfigEntry
@@ -161,7 +163,7 @@ class LiquidCheckLevelSensor(LiquidCheckBaseSensor):
 class LiquidCheckContentSensor(LiquidCheckBaseSensor):
     """Representation of Liquid Check Content Sensor."""
 
-    _attr_device_class = SensorDeviceClass.VOLUME
+    _attr_device_class = SensorDeviceClass.VOLUME_STORAGE
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfVolume.LITERS
 
