@@ -16,7 +16,7 @@ def _load(name: str) -> dict:
         return json.load(file)
 
 
-def _entities(hass) -> dict[str, list]:
+def _entities() -> dict[str, list]:
     """Instantiate every entity, grouped by platform."""
     coordinator = MagicMock()
     coordinator.data = {}
@@ -42,7 +42,7 @@ def _entities(hass) -> dict[str, list]:
             )
         ],
         "button": [
-            cls(hass, entry)
+            cls(coordinator, entry)
             for cls in (
                 button.LiquidCheckStartMeasureButton,
                 button.LiquidCheckRestartButton,
@@ -51,7 +51,7 @@ def _entities(hass) -> dict[str, list]:
     }
 
 
-async def test_every_entity_has_a_translated_name(hass):
+async def test_every_entity_has_a_translated_name():
     """Test each entity's translation key resolves to a name in strings.json.
 
     Without has_entity_name plus a translation key backed by strings.json, an
@@ -59,7 +59,7 @@ async def test_every_entity_has_a_translated_name(hass):
     """
     strings = _load("strings.json")
 
-    for platform, entities in _entities(hass).items():
+    for platform, entities in _entities().items():
         for entity in entities:
             key = entity.translation_key
             assert key is not None, f"{type(entity).__name__} has no translation key"
@@ -108,7 +108,7 @@ async def test_every_translation_covers_all_keys():
         )
 
 
-async def test_icons_reference_known_translation_keys(hass):
+async def test_icons_reference_known_translation_keys():
     """Test icons.json only names translation keys that actually exist.
 
     An icon under an unknown key is silently ignored by Home Assistant, so a
@@ -117,7 +117,7 @@ async def test_icons_reference_known_translation_keys(hass):
     icons = _load("icons.json")["entity"]
     known = {
         platform: {entity.translation_key for entity in entities}
-        for platform, entities in _entities(hass).items()
+        for platform, entities in _entities().items()
     }
 
     for platform, entries in icons.items():

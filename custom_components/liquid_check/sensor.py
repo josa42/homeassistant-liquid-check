@@ -17,11 +17,10 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import LiquidCheckDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,13 +61,7 @@ class LiquidCheckBaseSensor(CoordinatorEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._entry = entry
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name=entry.data["name"],
-            manufacturer="SI-Elektronik GmbH",
-            model="Liquid-Check",
-            configuration_url=f"http://{entry.data['host']}",
-        )
+        self._attr_device_info = coordinator.device_info
 
 
 class LiquidCheckLevelSensor(LiquidCheckBaseSensor):

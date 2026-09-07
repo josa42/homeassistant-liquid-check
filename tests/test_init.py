@@ -70,3 +70,40 @@ async def test_services_outlive_the_config_entries(
 
     assert hass.services.has_service(DOMAIN, SERVICE_START_MEASURE)
     assert hass.services.has_service(DOMAIN, SERVICE_RESTART)
+
+
+async def test_device_carries_the_reported_metadata(hass: HomeAssistant):
+    """Test firmware, hardware and MAC land on the device, not just sensors."""
+    import json
+    from pathlib import Path
+    from unittest.mock import AsyncMock
+
+    from homeassistant.helpers import device_registry as dr
+
+    from custom_components.liquid_check import DOMAIN
+
+    api_response = json.loads(
+        (Path(__file__).parent / "fixtures" / "api_response.json").read_text()
+    )
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"name": "Test", "host": "192.168.1.100", "scan_interval": 60},
+        entry_id="metadata",
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "custom_components.liquid_check.client.LiquidCheckClient.get_info",
+        AsyncMock(return_value=api_response),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    device = dr.async_entries_for_config_entry(dr.async_get(hass), entry.entry_id)[0]
+
+    assert device.sw_version == "1.91"
+    assert device.hw_version == "C5"
+    assert (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff") in device.connections
+    assert device.configuration_url == "http://192.168.1.100"
+    assert device.manufacturer == "SI-Elektronik GmbH"

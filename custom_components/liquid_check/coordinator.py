@@ -7,10 +7,13 @@ from datetime import timedelta
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .client import LiquidCheckClient
 from .config_flow import scan_interval
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,6 +23,7 @@ class LiquidCheckDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize."""
+        self.entry = entry
         self.client = LiquidCheckClient(
             entry.data["host"], async_get_clientsession(hass)
         )
@@ -69,7 +73,29 @@ class LiquidCheckDataUpdateCoordinator(DataUpdateCoordinator):
             # Get device data
             device = payload.get("device", {})
             result["firmware"] = device.get("firmware")
+            result["hardware"] = device.get("hardware")
+            result["mac"] = wifi.get("station", {}).get("mac")
             
             return result
         except Exception as err:
             raise UpdateFailed(f"Error fetching data: {err}") from err
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device registry entry both platforms attach to."""
+        data = self.data or {}
+
+        connections = set()
+        if mac := data.get("mac"):
+            connections.add((CONNECTION_NETWORK_MAC, format_mac(mac)))
+
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.entry.entry_id)},
+            connections=connections,
+            name=self.entry.data["name"],
+            manufacturer="SI-Elektronik GmbH",
+            model="Liquid-Check",
+            sw_version=data.get("firmware"),
+            hw_version=data.get("hardware"),
+            configuration_url=f"http://{self.entry.data['host']}",
+        )
