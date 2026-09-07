@@ -15,6 +15,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
+      - name: Check the tag matches the manifest version
+        run: |
+          manifest=$(python -c "import json; print(json.load(open('custom_components/liquid_check/manifest.json'))['version'])")
+          tag="${GITHUB_REF_NAME#v}"
+          if [ "$manifest" != "$tag" ]; then
+            echo "manifest version $manifest does not match tag $tag" >&2
+            exit 1
+          fi
+
       - name: Create release archive
         run: |
           cd custom_components
