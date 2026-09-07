@@ -1,1 +1,4 @@
-pytest-homeassistant-custom-component>=0.13.150
+# Home Assistant 2026.9 requires Python 3.14.2 or newer; keep CI on a version
+# that can resolve a current release rather than silently falling back to an
+# ancient one.
+pytest-homeassistant-custom-component>=0.13.364
