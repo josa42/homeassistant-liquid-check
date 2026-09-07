@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .client import LiquidCheckClient
 from .const import DOMAIN
@@ -62,7 +63,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ) -> None:
         """Send a command to the Liquid Check device."""
         config_entry = _config_entry_for_device(hass, device_id)
-        client = LiquidCheckClient(config_entry.data["host"])
+        client = LiquidCheckClient(
+            config_entry.data["host"], async_get_clientsession(hass)
+        )
         
         try:
             await client.send_command(command_name)

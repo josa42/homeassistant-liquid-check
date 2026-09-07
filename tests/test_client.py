@@ -1,7 +1,7 @@
 """Test the Liquid Check HTTP client."""
 import json
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -34,11 +34,7 @@ async def test_get_info_requests_the_device():
     """Test get_info reads infos.json from the device."""
     session = _mock_session(_mock_response(json=AsyncMock(return_value=API_RESPONSE)))
 
-    with patch(
-        "custom_components.liquid_check.client.aiohttp.ClientSession",
-        return_value=session,
-    ):
-        result = await LiquidCheckClient("192.168.1.100").get_info()
+    result = await LiquidCheckClient("192.168.1.100", session).get_info()
 
     assert result == API_RESPONSE
     assert session.get.call_args[0][0] == "http://192.168.1.100/infos.json"
@@ -49,11 +45,7 @@ async def test_send_command_posts_the_documented_envelope(command: str):
     """Test send_command posts the envelope the device firmware expects."""
     session = _mock_session(_mock_response())
 
-    with patch(
-        "custom_components.liquid_check.client.aiohttp.ClientSession",
-        return_value=session,
-    ):
-        await LiquidCheckClient("192.168.1.100").send_command(command)
+    await LiquidCheckClient("192.168.1.100", session).send_command(command)
 
     session.post.assert_called_once()
     args, kwargs = session.post.call_args
@@ -70,8 +62,5 @@ async def test_errors_propagate_to_the_caller():
     session = _mock_session(_mock_response())
     session.get = MagicMock(side_effect=OSError("Connection refused"))
 
-    with patch(
-        "custom_components.liquid_check.client.aiohttp.ClientSession",
-        return_value=session,
-    ), pytest.raises(OSError):
-        await LiquidCheckClient("192.168.1.100").get_info()
+    with pytest.raises(OSError):
+        await LiquidCheckClient("192.168.1.100", session).get_info()

@@ -18,6 +18,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -64,7 +65,9 @@ class LiquidCheckDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize."""
-        self._client = LiquidCheckClient(entry.data["host"])
+        self._client = LiquidCheckClient(
+            entry.data["host"], async_get_clientsession(hass)
+        )
         scan_interval = entry.data.get("scan_interval", DEFAULT_SCAN_INTERVAL)
         
         # If interval is 0, disable automatic polling

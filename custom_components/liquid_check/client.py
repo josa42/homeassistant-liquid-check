@@ -12,15 +12,16 @@ _LOGGER = logging.getLogger(__name__)
 class LiquidCheckClient:
     """Client to communicate with Liquid Check device."""
 
-    def __init__(self, host: str) -> None:
+    def __init__(self, host: str, session: aiohttp.ClientSession) -> None:
         """Initialize the client."""
         self._host = host
+        self._session = session
 
     async def get_info(self) -> dict[str, Any]:
         """Get device information."""
         url = f"http://{self._host}/infos.json"
         try:
-            async with aiohttp.ClientSession() as session, session.get(
+            async with self._session.get(
                 url, timeout=aiohttp.ClientTimeout(total=10)
             ) as response:
                 response.raise_for_status()
@@ -43,7 +44,7 @@ class LiquidCheckClient:
         }
 
         try:
-            async with aiohttp.ClientSession() as session, session.post(
+            async with self._session.post(
                 url,
                 json=payload,
                 headers={"Content-Type": "application/json; charset=utf-8"},

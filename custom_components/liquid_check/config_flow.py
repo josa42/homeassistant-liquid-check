@@ -9,6 +9,7 @@ from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .client import LiquidCheckClient
 
@@ -37,7 +38,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             raise InvalidHost
     
     try:
-        info = await LiquidCheckClient(host).get_info()
+        info = await LiquidCheckClient(host, async_get_clientsession(hass)).get_info()
     except Exception as err:
         raise CannotConnect from err
     

@@ -6,6 +6,7 @@ import logging
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -23,8 +24,8 @@ async def async_setup_entry(
     """Set up Liquid Check button based on a config entry."""
     async_add_entities(
         [
-            LiquidCheckStartMeasureButton(entry),
-            LiquidCheckRestartButton(entry),
+            LiquidCheckStartMeasureButton(hass, entry),
+            LiquidCheckRestartButton(hass, entry),
         ],
         True,
     )
@@ -36,9 +37,11 @@ class LiquidCheckBaseButton(ButtonEntity):
     _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.CONFIG
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the button."""
-        self._client = LiquidCheckClient(entry.data["host"])
+        self._client = LiquidCheckClient(
+            entry.data["host"], async_get_clientsession(hass)
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name=entry.data["name"],
@@ -57,9 +60,9 @@ class LiquidCheckStartMeasureButton(LiquidCheckBaseButton):
 
     _attr_translation_key = "start_measurement"
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the button."""
-        super().__init__(entry)
+        super().__init__(hass, entry)
         self._attr_unique_id = f"{entry.entry_id}_start_measure"
 
     async def async_press(self) -> None:
@@ -72,9 +75,9 @@ class LiquidCheckRestartButton(LiquidCheckBaseButton):
 
     _attr_translation_key = "restart"
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the button."""
-        super().__init__(entry)
+        super().__init__(hass, entry)
         self._attr_unique_id = f"{entry.entry_id}_restart"
 
     async def async_press(self) -> None:

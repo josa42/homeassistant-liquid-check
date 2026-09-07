@@ -191,42 +191,30 @@ async def test_sensor_handles_none_data():
     assert sensor.native_value is None
 
 
-async def test_coordinator_parses_api_response():
+async def test_coordinator_parses_api_response(hass: HomeAssistant):
     """Test that coordinator correctly parses the API response structure."""
     import json
     from pathlib import Path
     from unittest.mock import AsyncMock, MagicMock, patch
 
-    from homeassistant.core import HomeAssistant
-
     from custom_components.liquid_check.sensor import LiquidCheckDataUpdateCoordinator
-    
+
     # Load the fixture
     fixture_path = Path(__file__).parent / "fixtures" / "api_response.json"
     with open(fixture_path) as f:
         api_response = json.load(f)
-    
-    hass = HomeAssistant("/test")
+
     entry = MagicMock()
     entry.data = {"name": "Test", "host": "192.168.1.100"}
-    
+
     coordinator = LiquidCheckDataUpdateCoordinator(hass, entry)
-    
-    # Mock the HTTP response
-    mock_response = MagicMock()
-    mock_response.status = 200
-    mock_response.json = AsyncMock(return_value=api_response)
-    mock_response.__aenter__ = AsyncMock(return_value=mock_response)
-    mock_response.__aexit__ = AsyncMock(return_value=None)
-    
-    mock_session = MagicMock()
-    mock_session.get = MagicMock(return_value=mock_response)
-    mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-    mock_session.__aexit__ = AsyncMock(return_value=None)
-    
-    with patch("aiohttp.ClientSession", return_value=mock_session):
+
+    with patch(
+        "custom_components.liquid_check.client.LiquidCheckClient.get_info",
+        AsyncMock(return_value=api_response),
+    ):
         result = await coordinator._async_update_data()
-    
+
     # Verify the flattened structure
     assert result["level"] == 0.24
     assert result["content"] == 960
