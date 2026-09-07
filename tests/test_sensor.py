@@ -206,6 +206,7 @@ async def test_coordinator_parses_api_response(hass: HomeAssistant):
 
     entry = MagicMock()
     entry.data = {"name": "Test", "host": "192.168.1.100"}
+    entry.options = {}
 
     coordinator = LiquidCheckDataUpdateCoordinator(hass, entry)
 

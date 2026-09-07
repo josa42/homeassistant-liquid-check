@@ -28,11 +28,10 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .client import LiquidCheckClient
+from .config_flow import scan_interval
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_SCAN_INTERVAL = 60
 
 
 async def async_setup_entry(
@@ -68,12 +67,10 @@ class LiquidCheckDataUpdateCoordinator(DataUpdateCoordinator):
         self._client = LiquidCheckClient(
             entry.data["host"], async_get_clientsession(hass)
         )
-        scan_interval = entry.data.get("scan_interval", DEFAULT_SCAN_INTERVAL)
+        interval = scan_interval(entry)
         
         # If interval is 0, disable automatic polling
-        update_interval = (
-            None if scan_interval == 0 else timedelta(seconds=scan_interval)
-        )
+        update_interval = None if interval == 0 else timedelta(seconds=interval)
         
         super().__init__(
             hass,

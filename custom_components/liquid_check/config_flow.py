@@ -6,18 +6,32 @@ from typing import Any
 
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .client import LiquidCheckClient
 
+DEFAULT_SCAN_INTERVAL = 60
+
+
+def scan_interval(entry: config_entries.ConfigEntry) -> int:
+    """Return the configured poll interval for an entry.
+
+    Options win over the value captured at setup time, so an entry created
+    before the options flow existed keeps working.
+    """
+    return entry.options.get(
+        "scan_interval", entry.data.get("scan_interval", DEFAULT_SCAN_INTERVAL)
+    )
+
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required("name"): str,
         vol.Required("host"): str,
-        vol.Optional("scan_interval", default=60): vol.All(
+        vol.Optional("scan_interval", default=DEFAULT_SCAN_INTERVAL): vol.All(
             vol.Coerce(int), vol.Range(min=0, max=3600)
         ),
     }
@@ -54,6 +68,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain="liquid_check"):
 
     VERSION = 1
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
+        """Return the options flow."""
+        return OptionsFlowHandler()
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -77,6 +99,29 @@ class ConfigFlow(config_entries.ConfigFlow, domain="liquid_check"):
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle the Liquid Check options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the poll interval."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        "scan_interval",
+                        default=scan_interval(self.config_entry),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=0, max=3600)),
+                }
+            ),
         )
 
 

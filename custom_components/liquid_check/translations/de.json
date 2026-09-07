@@ -25,6 +25,19 @@
       "already_configured": "Gerät ist bereits konfiguriert"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Liquid-Check-Optionen",
+        "data": {
+          "scan_interval": "Abfrageintervall (Sekunden)"
+        },
+        "data_description": {
+          "scan_interval": "Wie oft Daten vom Gerät abgerufen werden (0 deaktiviert die automatische Abfrage, 1-3600 Sekunden, Standard: 60)"
+        }
+      }
+    }
+  },
   "device_automation": {
     "action_type": {
       "restart": "Gerät neu starten",
