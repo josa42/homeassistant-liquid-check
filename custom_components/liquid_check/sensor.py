@@ -17,7 +17,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -146,6 +146,7 @@ class LiquidCheckWiFiRSSISensor(LiquidCheckBaseSensor):
     _attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
 
     def __init__(
@@ -168,6 +169,7 @@ class LiquidCheckPumpTotalRunsSensor(LiquidCheckBaseSensor):
 
     _attr_translation_key = "pump_total_runs"
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
 
     def __init__(
@@ -192,6 +194,7 @@ class LiquidCheckPumpTotalRuntimeSensor(LiquidCheckBaseSensor):
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_native_unit_of_measurement = UnitOfTime.SECONDS
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
 
     def __init__(
@@ -216,6 +219,7 @@ class LiquidCheckUptimeSensor(LiquidCheckBaseSensor):
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_native_unit_of_measurement = UnitOfTime.SECONDS
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
 
     def __init__(
@@ -237,6 +241,7 @@ class LiquidCheckErrorSensor(LiquidCheckBaseSensor):
     """Representation of Liquid Check Error Sensor."""
 
     _attr_translation_key = "error"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
 
     def __init__(
@@ -258,6 +263,7 @@ class LiquidCheckFirmwareSensor(LiquidCheckBaseSensor):
     """Representation of Liquid Check Firmware Sensor."""
 
     _attr_translation_key = "firmware"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
 
     def __init__(
@@ -282,6 +288,7 @@ class LiquidCheckMeasurementAgeSensor(LiquidCheckBaseSensor):
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfTime.SECONDS
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
 
     def __init__(

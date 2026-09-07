@@ -292,3 +292,61 @@ async def test_sensor_state_classes_are_valid_for_device_class():
             f"{sensor_class.__name__} uses state class '{state_class}' which is "
             f"impossible for device class '{device_class}'"
         )
+
+
+async def test_only_primary_readings_are_uncategorised():
+    """Test the supporting sensors are diagnostic and the readings are not.
+
+    Level, content and percent are what the device is for and belong on the
+    device card; everything else is supporting detail.
+    """
+    from unittest.mock import MagicMock
+
+    from homeassistant.helpers.entity import EntityCategory
+
+    from custom_components.liquid_check.sensor import (
+        LiquidCheckContentSensor,
+        LiquidCheckErrorSensor,
+        LiquidCheckFirmwareSensor,
+        LiquidCheckLevelSensor,
+        LiquidCheckMeasurementAgeSensor,
+        LiquidCheckPercentSensor,
+        LiquidCheckPumpTotalRunsSensor,
+        LiquidCheckPumpTotalRuntimeSensor,
+        LiquidCheckUptimeSensor,
+        LiquidCheckWiFiRSSISensor,
+    )
+
+    coordinator = MagicMock()
+    coordinator.data = {}
+
+    entry = MagicMock()
+    entry.data = {"name": "Test", "host": "192.168.1.100"}
+    entry.entry_id = "test123"
+
+    primary = [
+        LiquidCheckLevelSensor,
+        LiquidCheckContentSensor,
+        LiquidCheckPercentSensor,
+    ]
+    diagnostic = [
+        LiquidCheckWiFiRSSISensor,
+        LiquidCheckPumpTotalRunsSensor,
+        LiquidCheckPumpTotalRuntimeSensor,
+        LiquidCheckUptimeSensor,
+        LiquidCheckErrorSensor,
+        LiquidCheckFirmwareSensor,
+        LiquidCheckMeasurementAgeSensor,
+    ]
+
+    for sensor_class in primary:
+        sensor = sensor_class(coordinator, entry)
+        assert sensor.entity_category is None, sensor_class.__name__
+        assert sensor.entity_registry_enabled_default, sensor_class.__name__
+
+    for sensor_class in diagnostic:
+        sensor = sensor_class(coordinator, entry)
+        assert sensor.entity_category is EntityCategory.DIAGNOSTIC, (
+            sensor_class.__name__
+        )
+        assert not sensor.entity_registry_enabled_default, sensor_class.__name__
