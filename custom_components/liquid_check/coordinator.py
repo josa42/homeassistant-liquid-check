@@ -36,6 +36,7 @@ class LiquidCheckDataUpdateCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name="Liquid Check",
+            config_entry=entry,
             update_interval=update_interval,
         )
 
