@@ -13,6 +13,7 @@ A Home Assistant integration to use the [Liquid-Check](https://liquid-check-info
 
 - 🌊 **Liquid Level Monitoring** - Real-time liquid level measurements in non-pressurized containers
 - 📊 **Volume Tracking** - Monitor content in liters and percentage
+- 💧 **Withdrawal & Inflow** - Count the liquid taken out and added, as water meters
 - 🔌 **Pump Monitoring** - Track connected pump runs and runtime
 - 📡 **WiFi Signal** - Monitor device connectivity (RSSI)
 - ⏱️ **Uptime Tracking** - Device and measurement age monitoring
@@ -76,13 +77,15 @@ it again with the new address and the existing device is updated in place.
 
 ## Sensors
 
-The integration provides 10 sensors:
+The integration provides 12 sensors:
 
 | Sensor | Description | Unit | Enabled by Default |
 |--------|-------------|------|--------------------|
 | **Level** | Liquid level distance | m | ✓ |
 | **Content** | Liquid volume | L | ✓ |
 | **Percent** | Fill level percentage | % | ✓ |
+| **Withdrawal** | Liquid taken out, counted up | L | ✓ |
+| **Inflow** | Liquid added, counted up | L | ✓ |
 | **WiFi RSSI** | WiFi signal strength | dBm | |
 | **Pump total runs** | Connected pump total cycles | - | |
 | **Pump total runtime** | Connected pump total operation time | s | |
@@ -94,6 +97,29 @@ The integration provides 10 sensors:
 The seven sensors that are off by default are diagnostic. Enable the ones you
 want under the device page. Firmware and hardware revision are also shown on the
 device itself, so you only need the firmware sensor if you template against it.
+
+<br><br>
+
+## Withdrawal and inflow
+
+**Withdrawal** and **Inflow** turn the level into two running totals: how much
+liquid has left the tank, and how much has gone in. Both are water meters, so
+they can go straight into the energy dashboard and into utility meters for daily
+or monthly figures.
+
+The device reports the content in steps, and a reading wobbles by a step on its
+own, which would otherwise pile up into hundreds of liters a day. So each
+counter keeps a mark and only books a change once the content is further than
+the **tolerance** away from it. A move in the other direction takes the mark
+along without being booked, which is what keeps the wobble out. Real changes
+below the tolerance are not lost, they are booked as soon as they add up past
+it.
+
+Set the tolerance under **Settings** → **Devices & Services** → **Liquid Check**
+→ **Configure**. The default of 50 liters suits a tank reporting in steps of
+40 liters; pick a value above your own step size. Both counters keep their
+totals across restarts, and nothing else is filtered out: a fault or a tank
+emptied for cleaning is counted like any other change.
 
 <br><br>
 

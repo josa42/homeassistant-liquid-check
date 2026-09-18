@@ -14,6 +14,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .client import LiquidCheckClient
 
 DEFAULT_SCAN_INTERVAL = 60
+DEFAULT_TOLERANCE = 50
 
 
 def scan_interval(entry: config_entries.ConfigEntry) -> int:
@@ -24,6 +25,18 @@ def scan_interval(entry: config_entries.ConfigEntry) -> int:
     """
     return entry.options.get(
         "scan_interval", entry.data.get("scan_interval", DEFAULT_SCAN_INTERVAL)
+    )
+
+
+def tolerance(entry: config_entries.ConfigEntry) -> float:
+    """Return how far the level may move before it counts as a real change.
+
+    The device reports in steps, and a reading wobbles by a step on its own.
+    Anything up to this many liters is read as that wobble rather than as
+    liquid entering or leaving the tank.
+    """
+    return float(
+        entry.options.get("tolerance", entry.data.get("tolerance", DEFAULT_TOLERANCE))
     )
 
 
@@ -108,7 +121,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Manage the poll interval."""
+        """Manage the poll interval and the counting tolerance."""
         if user_input is not None:
             return self.async_create_entry(data=user_input)
 
@@ -120,6 +133,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         "scan_interval",
                         default=scan_interval(self.config_entry),
                     ): vol.All(vol.Coerce(int), vol.Range(min=0, max=3600)),
+                    vol.Optional(
+                        "tolerance",
+                        default=tolerance(self.config_entry),
+                    ): vol.All(vol.Coerce(float), vol.Range(min=0, max=1000)),
                 }
             ),
         )

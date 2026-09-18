@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -16,11 +18,13 @@ from homeassistant.const import (
     UnitOfTime,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .config_flow import tolerance
 from .coordinator import LiquidCheckDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,6 +43,8 @@ async def async_setup_entry(
             LiquidCheckLevelSensor(coordinator, entry),
             LiquidCheckContentSensor(coordinator, entry),
             LiquidCheckPercentSensor(coordinator, entry),
+            LiquidCheckWithdrawalSensor(coordinator, entry),
+            LiquidCheckInflowSensor(coordinator, entry),
             LiquidCheckWiFiRSSISensor(coordinator, entry),
             LiquidCheckPumpTotalRunsSensor(coordinator, entry),
             LiquidCheckPumpTotalRuntimeSensor(coordinator, entry),
@@ -130,6 +136,122 @@ class LiquidCheckPercentSensor(LiquidCheckBaseSensor):
         if self.coordinator.data:
             return self.coordinator.data.get("percent")
         return None
+
+
+@dataclass
+class CounterStoredData(ExtraStoredData):
+    """The counter state that has to outlive a restart or a reload."""
+
+    total: float
+    mark: float | None
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return the data to store."""
+        return {"total": self.total, "mark": self.mark}
+
+    @classmethod
+    def from_dict(cls, stored: dict[str, Any]) -> CounterStoredData | None:
+        """Return the stored data, or None if it cannot be read back."""
+        try:
+            mark = stored["mark"]
+            return cls(float(stored["total"]), None if mark is None else float(mark))
+        except (KeyError, TypeError, ValueError):
+            return None
+
+
+class LiquidCheckCounterSensor(LiquidCheckBaseSensor, RestoreEntity):
+    """Base class for the sensors that add up the level changes in one direction.
+
+    The device reports the content in steps, and a reading wobbles by a step
+    without any liquid moving. So the counter keeps a mark and only books a
+    change once the content is further than the tolerance away from it, in the
+    direction the counter is interested in. A move in the other direction is
+    not booked and takes the mark with it, which is what keeps the wobble from
+    accumulating. Real changes below the tolerance are not lost either: they
+    are booked as soon as they add up past it.
+    """
+
+    _attr_device_class = SensorDeviceClass.WATER
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_native_unit_of_measurement = UnitOfVolume.LITERS
+    _attr_suggested_display_precision = 0
+
+    _key: str
+    _counts_rise: bool
+
+    def __init__(
+        self, coordinator: LiquidCheckDataUpdateCoordinator, entry: ConfigEntry
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, entry)
+        self._attr_unique_id = f"{entry.entry_id}_{self._key}"
+        self._total = 0.0
+        self._mark: float | None = None
+
+    @property
+    def native_value(self) -> float:
+        """Return the liters counted so far."""
+        return round(self._total, 1)
+
+    @property
+    def extra_restore_state_data(self) -> CounterStoredData:
+        """Return the counter state to store."""
+        return CounterStoredData(self._total, self._mark)
+
+    async def async_added_to_hass(self) -> None:
+        """Restore the counter, then take the current content as the mark."""
+        if (stored := await self.async_get_last_extra_data()) is not None:
+            if (restored := CounterStoredData.from_dict(stored.as_dict())) is not None:
+                self._total = restored.total
+                self._mark = restored.mark
+
+        await super().async_added_to_hass()
+        self._count()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Count the change this update brought, then write the state."""
+        self._count()
+        super()._handle_coordinator_update()
+
+    def _count(self) -> None:
+        """Book the content's distance from the mark, if it is far enough."""
+        data = self.coordinator.data or {}
+        content = data.get("content")
+        if content is None:
+            return
+
+        content = float(content)
+        if self._mark is None:
+            self._mark = content
+            return
+
+        change = content - self._mark
+        counted = change if self._counts_rise else -change
+
+        if counted > tolerance(self._entry):
+            self._total += counted
+            self._mark = content
+        elif counted < 0:
+            # A move the other way is this counter's counterpart's business,
+            # but the mark has to follow it so the wobble cannot add up.
+            self._mark = content
+
+
+class LiquidCheckWithdrawalSensor(LiquidCheckCounterSensor):
+    """Representation of the liquid taken out of the tank."""
+
+    _attr_translation_key = "withdrawal"
+    _key = "withdrawal"
+    _counts_rise = False
+
+
+class LiquidCheckInflowSensor(LiquidCheckCounterSensor):
+    """Representation of the liquid that went into the tank."""
+
+    _attr_translation_key = "inflow"
+    _key = "inflow"
+    _counts_rise = True
 
 
 class LiquidCheckWiFiRSSISensor(LiquidCheckBaseSensor):

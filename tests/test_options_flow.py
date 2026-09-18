@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.liquid_check import DOMAIN
-from custom_components.liquid_check.config_flow import scan_interval
+from custom_components.liquid_check.config_flow import scan_interval, tolerance
 
 API_RESPONSE = json.loads(
     (Path(__file__).parent / "fixtures" / "api_response.json").read_text()
@@ -73,3 +73,39 @@ async def test_options_default_to_the_setup_value(hass: HomeAssistant):
 
     assert entry.options == {}
     assert scan_interval(entry) == 120
+
+
+async def test_options_flow_changes_the_tolerance(hass: HomeAssistant):
+    """Test the counting tolerance can be matched to the tank."""
+    entry = await _setup(hass, scan_interval=60)
+    assert tolerance(entry) == 50
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    with patch(GET_INFO, AsyncMock(return_value=API_RESPONSE)):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], {"scan_interval": 60, "tolerance": 120}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert tolerance(entry) == 120
+
+
+async def test_the_tolerance_survives_an_interval_change(hass: HomeAssistant):
+    """Test the form keeps the stored tolerance rather than resetting it.
+
+    The options flow replaces the whole options dict, so a form that dropped
+    the tolerance would silently put every counter back to the default.
+    """
+    entry = await _setup(hass, scan_interval=60)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    with patch(GET_INFO, AsyncMock(return_value=API_RESPONSE)):
+        await hass.config_entries.options.async_configure(
+            result["flow_id"], {"scan_interval": 60, "tolerance": 120}
+        )
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["data_schema"]({})["tolerance"] == 120

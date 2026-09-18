@@ -15,6 +15,9 @@
       "firmware": {
         "default": "mdi:chip"
       },
+      "inflow": {
+        "default": "mdi:water-plus"
+      },
       "level": {
         "default": "mdi:waves-arrow-up"
       },
@@ -32,6 +35,9 @@
       },
       "uptime": {
         "default": "mdi:timer-outline"
+      },
+      "withdrawal": {
+        "default": "mdi:water-minus"
       }
     }
   },

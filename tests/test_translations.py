@@ -32,6 +32,8 @@ def _entities() -> dict[str, list]:
                 sensor.LiquidCheckLevelSensor,
                 sensor.LiquidCheckContentSensor,
                 sensor.LiquidCheckPercentSensor,
+                sensor.LiquidCheckWithdrawalSensor,
+                sensor.LiquidCheckInflowSensor,
                 sensor.LiquidCheckWiFiRSSISensor,
                 sensor.LiquidCheckPumpTotalRunsSensor,
                 sensor.LiquidCheckPumpTotalRuntimeSensor,
