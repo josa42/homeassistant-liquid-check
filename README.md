@@ -26,6 +26,9 @@ A Home Assistant integration to use the [Liquid-Check](https://liquid-check-info
 
 ## Installation
 
+Requires Home Assistant **2026.9.0** or newer, the oldest release this
+integration is tested against.
+
 ### HACS (Recommended)
 
 1. **Add Custom Repository**:

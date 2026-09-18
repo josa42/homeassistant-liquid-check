@@ -6,7 +6,7 @@ This guide covers development setup, testing, and contribution guidelines for th
 
 ### Prerequisites
 
-- Python 3.12 or later
+- Python 3.14.2 or later, the version Home Assistant 2026.9 requires
 - Git
 - Docker and Docker Compose (for local testing)
 - A Liquid Check device (or mock server)
@@ -323,7 +323,7 @@ chore: update dependencies
 The project uses GitHub Actions for:
 
 - **Linting**: Ruff checks on every push
-- **Testing**: Pytest on Python 3.12
+- **Testing**: Pytest on Python 3.14
 - **Validation**: HACS validation
 
 See `.github/workflows/ci.yml` for details.
