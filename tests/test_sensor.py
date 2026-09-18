@@ -234,7 +234,9 @@ async def test_coordinator_parses_api_response(hass: HomeAssistant):
     assert result["totalRuns"] == 12
     assert result["totalRuntime"] == 43
     assert result["rssi"] == -85
+    assert result["ssid"] == "Test-Network"
     assert result["firmware"] == "1.91"
+    assert result["maxLevel"] == 2.75
 
 
 async def test_sensor_state_classes_are_valid_for_device_class():
@@ -256,8 +258,10 @@ async def test_sensor_state_classes_are_valid_for_device_class():
         LiquidCheckPercentSensor,
         LiquidCheckPumpTotalRunsSensor,
         LiquidCheckPumpTotalRuntimeSensor,
+        LiquidCheckTankMaxLevelSensor,
         LiquidCheckUptimeSensor,
         LiquidCheckWiFiRSSISensor,
+        LiquidCheckWiFiSSIDSensor,
     )
 
     coordinator = MagicMock()
@@ -278,6 +282,8 @@ async def test_sensor_state_classes_are_valid_for_device_class():
         LiquidCheckErrorSensor,
         LiquidCheckFirmwareSensor,
         LiquidCheckMeasurementAgeSensor,
+        LiquidCheckTankMaxLevelSensor,
+        LiquidCheckWiFiSSIDSensor,
     ]
 
     for sensor_class in sensor_classes:
@@ -313,8 +319,10 @@ async def test_only_primary_readings_are_uncategorised():
         LiquidCheckPercentSensor,
         LiquidCheckPumpTotalRunsSensor,
         LiquidCheckPumpTotalRuntimeSensor,
+        LiquidCheckTankMaxLevelSensor,
         LiquidCheckUptimeSensor,
         LiquidCheckWiFiRSSISensor,
+        LiquidCheckWiFiSSIDSensor,
     )
 
     coordinator = MagicMock()
@@ -337,6 +345,8 @@ async def test_only_primary_readings_are_uncategorised():
         LiquidCheckErrorSensor,
         LiquidCheckFirmwareSensor,
         LiquidCheckMeasurementAgeSensor,
+        LiquidCheckTankMaxLevelSensor,
+        LiquidCheckWiFiSSIDSensor,
     ]
 
     for sensor_class in primary:
@@ -350,3 +360,39 @@ async def test_only_primary_readings_are_uncategorised():
             sensor_class.__name__
         )
         assert not sensor.entity_registry_enabled_default, sensor_class.__name__
+
+
+async def test_tank_and_wifi_detail_sensors_read_their_values():
+    """Test the tank size and the network the device is on are exposed.
+
+    Both come from the payload the coordinator already fetches, and both are
+    the values needed to judge a reading: what a full tank means, and which
+    access point the device found.
+    """
+    from unittest.mock import MagicMock
+
+    from homeassistant.const import UnitOfLength
+
+    from custom_components.liquid_check.sensor import (
+        LiquidCheckTankMaxLevelSensor,
+        LiquidCheckWiFiSSIDSensor,
+    )
+
+    coordinator = MagicMock()
+    coordinator.data = {"maxLevel": 2.75, "ssid": "Test-Network"}
+
+    entry = MagicMock()
+    entry.data = {"name": "Test", "host": "192.168.1.100"}
+    entry.entry_id = "test123"
+
+    max_level = LiquidCheckTankMaxLevelSensor(coordinator, entry)
+    assert max_level.device_class == "distance"
+    assert max_level.native_unit_of_measurement == UnitOfLength.METERS
+    assert max_level.native_value == 2.75
+
+    ssid = LiquidCheckWiFiSSIDSensor(coordinator, entry)
+    assert ssid.native_value == "Test-Network"
+
+    coordinator.data = None
+    assert max_level.native_value is None
+    assert ssid.native_value is None

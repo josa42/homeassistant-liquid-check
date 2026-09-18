@@ -33,8 +33,14 @@
       "pump_total_runtime": {
         "default": "mdi:timer-play-outline"
       },
+      "tank_max_level": {
+        "default": "mdi:arrow-expand-vertical"
+      },
       "uptime": {
         "default": "mdi:timer-outline"
+      },
+      "wifi_ssid": {
+        "default": "mdi:wifi-settings"
       },
       "withdrawal": {
         "default": "mdi:water-minus"

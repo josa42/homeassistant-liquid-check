@@ -80,7 +80,7 @@ it again with the new address and the existing device is updated in place.
 
 ## Sensors
 
-The integration provides 12 sensors:
+The integration provides 14 sensors:
 
 | Sensor | Description | Unit | Enabled by Default |
 |--------|-------------|------|--------------------|
@@ -96,8 +96,10 @@ The integration provides 12 sensors:
 | **Error** | Device error status | - | |
 | **Firmware** | Firmware version | - | |
 | **Measurement age** | Time since last measurement | s | |
+| **Tank max level** | Configured tank height | m | |
+| **WiFi SSID** | Network the device is connected to | - | |
 
-The seven sensors that are off by default are diagnostic. Enable the ones you
+The nine sensors that are off by default are diagnostic. Enable the ones you
 want under the device page. Firmware and hardware revision are also shown on the
 device itself, so you only need the firmware sensor if you template against it.
 

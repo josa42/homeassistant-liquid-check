@@ -83,11 +83,17 @@
       "pump_total_runtime": {
         "name": "Pumpenlaufzeit gesamt"
       },
+      "tank_max_level": {
+        "name": "Maximale Füllhöhe"
+      },
       "uptime": {
         "name": "Betriebszeit"
       },
       "wifi_rssi": {
         "name": "WLAN-Signalstärke"
+      },
+      "wifi_ssid": {
+        "name": "WLAN-SSID"
       },
       "withdrawal": {
         "name": "Entnahme"

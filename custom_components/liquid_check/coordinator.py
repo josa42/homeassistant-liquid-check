@@ -55,6 +55,7 @@ class LiquidCheckDataUpdateCoordinator(DataUpdateCoordinator):
             result["content"] = measure.get("content")
             result["percent"] = measure.get("percent")
             result["age"] = measure.get("age")
+            result["maxLevel"] = measure.get("tank", {}).get("maxLevel")
             
             # Get system data
             system = payload.get("system", {})
@@ -70,6 +71,7 @@ class LiquidCheckDataUpdateCoordinator(DataUpdateCoordinator):
             wifi = payload.get("wifi", {})
             access_point = wifi.get("accessPoint", {})
             result["rssi"] = access_point.get("rssi")
+            result["ssid"] = access_point.get("ssid")
             
             # Get device data
             device = payload.get("device", {})

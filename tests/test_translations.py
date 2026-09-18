@@ -41,6 +41,8 @@ def _entities() -> dict[str, list]:
                 sensor.LiquidCheckErrorSensor,
                 sensor.LiquidCheckFirmwareSensor,
                 sensor.LiquidCheckMeasurementAgeSensor,
+                sensor.LiquidCheckTankMaxLevelSensor,
+                sensor.LiquidCheckWiFiSSIDSensor,
             )
         ],
         "button": [

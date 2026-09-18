@@ -83,11 +83,17 @@
       "pump_total_runtime": {
         "name": "Pump total runtime"
       },
+      "tank_max_level": {
+        "name": "Tank max level"
+      },
       "uptime": {
         "name": "Uptime"
       },
       "wifi_rssi": {
         "name": "WiFi RSSI"
+      },
+      "wifi_ssid": {
+        "name": "WiFi SSID"
       },
       "withdrawal": {
         "name": "Withdrawal"

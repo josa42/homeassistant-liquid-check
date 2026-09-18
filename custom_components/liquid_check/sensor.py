@@ -52,6 +52,8 @@ async def async_setup_entry(
             LiquidCheckErrorSensor(coordinator, entry),
             LiquidCheckFirmwareSensor(coordinator, entry),
             LiquidCheckMeasurementAgeSensor(coordinator, entry),
+            LiquidCheckTankMaxLevelSensor(coordinator, entry),
+            LiquidCheckWiFiSSIDSensor(coordinator, entry),
         ]
     )
 
@@ -418,4 +420,51 @@ class LiquidCheckMeasurementAgeSensor(LiquidCheckBaseSensor):
         """Return the state of the sensor."""
         if self.coordinator.data:
             return self.coordinator.data.get("age")
+        return None
+
+
+class LiquidCheckTankMaxLevelSensor(LiquidCheckBaseSensor):
+    """Representation of Liquid Check Tank Max Level Sensor."""
+
+    _attr_translation_key = "tank_max_level"
+    _attr_device_class = SensorDeviceClass.DISTANCE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = UnitOfLength.METERS
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(
+        self, coordinator: LiquidCheckDataUpdateCoordinator, entry: ConfigEntry
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, entry)
+        self._attr_unique_id = f"{entry.entry_id}_tank_max_level"
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        if self.coordinator.data:
+            return self.coordinator.data.get("maxLevel")
+        return None
+
+
+class LiquidCheckWiFiSSIDSensor(LiquidCheckBaseSensor):
+    """Representation of Liquid Check WiFi SSID Sensor."""
+
+    _attr_translation_key = "wifi_ssid"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(
+        self, coordinator: LiquidCheckDataUpdateCoordinator, entry: ConfigEntry
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, entry)
+        self._attr_unique_id = f"{entry.entry_id}_wifi_ssid"
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        if self.coordinator.data:
+            return self.coordinator.data.get("ssid")
         return None
