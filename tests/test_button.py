@@ -1,7 +1,5 @@
 """Test the Liquid Check buttons."""
-import json
 from datetime import timedelta
-from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -17,20 +15,21 @@ from pytest_homeassistant_custom_component.common import (
 
 from custom_components.liquid_check import DOMAIN
 
-API_RESPONSE = json.loads(
-    (Path(__file__).parent / "fixtures" / "api_response.json").read_text()
-)
+from .conftest import FakeDevice
 
 GET_INFO = "custom_components.liquid_check.client.LiquidCheckClient.get_info"
 SEND_COMMAND = "custom_components.liquid_check.client.LiquidCheckClient.send_command"
 
-# The coordinator debounces refresh requests; step past the cooldown.
-PAST_COOLDOWN = timedelta(seconds=15)
+START_MEASUREMENT = "button.test_start_measurement"
+CONTENT = "sensor.test_content"
 
 
 @pytest.fixture
-async def setup_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Set up a config entry with a stubbed device."""
+async def setup_entry(hass: HomeAssistant, device: FakeDevice) -> MockConfigEntry:
+    """Set up a config entry with polling disabled.
+
+    Without polling, any reading after setup has to come from the button.
+    """
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={"name": "Test", "host": "192.168.1.100", "scan_interval": 0},
@@ -38,85 +37,102 @@ async def setup_entry(hass: HomeAssistant) -> MockConfigEntry:
     )
     entry.add_to_hass(hass)
 
-    with patch(GET_INFO, AsyncMock(return_value=API_RESPONSE)):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     return entry
+
+
+async def _press(hass: HomeAssistant, entity_id: str) -> None:
+    """Press a button and wait for the press to finish."""
+    await hass.services.async_call(
+        BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(
     ("entity_id", "command"),
     [
-        ("button.test_start_measurement", "StartMeasure"),
+        (START_MEASUREMENT, "StartMeasure"),
         ("button.test_restart", "Restart"),
     ],
 )
 async def test_button_sends_its_command(
-    hass: HomeAssistant, setup_entry, entity_id: str, command: str
+    hass: HomeAssistant, setup_entry, device: FakeDevice, entity_id: str, command: str
 ):
     """Test each button sends the command it is named for."""
     assert hass.states.get(entity_id) is not None
 
-    send_command = AsyncMock()
-    with patch(SEND_COMMAND, send_command), patch(
-        GET_INFO, AsyncMock(return_value=API_RESPONSE)
-    ):
-        await hass.services.async_call(
-            BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: entity_id}, blocking=True
-        )
-        await hass.async_block_till_done()
+    await _press(hass, entity_id)
 
-    send_command.assert_awaited_once_with(command)
+    assert device.commands == [command]
 
 
-async def test_measuring_refreshes_the_sensors(
-    hass: HomeAssistant, setup_entry, freezer
+async def test_measuring_waits_for_the_new_reading(
+    hass: HomeAssistant, setup_entry, device: FakeDevice
 ):
-    """Test a measurement is refetched instead of waiting for the next poll.
+    """Test the press returns with the new reading, not the one before it.
 
-    Polling is disabled for this entry, so any refetch has to come from the
-    button press itself.
+    A fetch right after the command still returns the previous reading, because
+    the pump has not finished yet.
     """
-    get_info = AsyncMock(return_value=API_RESPONSE)
-    with patch(SEND_COMMAND, AsyncMock()), patch(GET_INFO, get_info):
-        await hass.services.async_call(
-            BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.test_start_measurement"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
+    assert hass.states.get(CONTENT).state == "960"
 
-        freezer.tick(PAST_COOLDOWN)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+    await _press(hass, START_MEASUREMENT)
 
-    assert get_info.await_count == 1
+    assert hass.states.get(CONTENT).state == "1234"
+    assert device.polls > 2
 
 
-async def test_restarting_does_not_refresh(hass: HomeAssistant, setup_entry, freezer):
+async def test_measuring_rides_out_a_silent_device(
+    hass: HomeAssistant, setup_entry, device: FakeDevice
+):
+    """Test a device that does not answer while measuring is waited for.
+
+    The missed polls must not count as failed updates, or every sensor would
+    flicker to unavailable during each measurement.
+    """
+    device.answers_while_measuring = False
+    states = []
+    hass.bus.async_listen(
+        "state_changed", lambda event: states.append(event.data["new_state"].state)
+    )
+
+    await _press(hass, START_MEASUREMENT)
+
+    assert hass.states.get(CONTENT).state == "1234"
+    assert "unavailable" not in states
+
+
+async def test_measuring_without_a_new_reading_fails(
+    hass: HomeAssistant, setup_entry, device: FakeDevice
+):
+    """Test the press fails instead of leaving the old reading looking fresh."""
+    device.finishes = False
+
+    with pytest.raises(HomeAssistantError) as err:
+        await _press(hass, START_MEASUREMENT)
+
+    assert err.value.translation_key == "measurement_timeout"
+    assert hass.states.get(CONTENT).state == "960"
+
+
+async def test_restarting_does_not_refresh(
+    hass: HomeAssistant, setup_entry, device: FakeDevice, freezer
+):
     """Test restarting the device does not trigger a pointless refetch."""
-    get_info = AsyncMock(return_value=API_RESPONSE)
-    with patch(SEND_COMMAND, AsyncMock()), patch(GET_INFO, get_info):
-        await hass.services.async_call(
-            BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.test_restart"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
+    polls = device.polls
 
-        freezer.tick(PAST_COOLDOWN)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+    await _press(hass, "button.test_restart")
+    freezer.tick(timedelta(seconds=15))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    assert get_info.await_count == 0
+    assert device.polls == polls
 
 
-@pytest.mark.parametrize(
-    "entity_id", ["button.test_start_measurement", "button.test_restart"]
-)
+@pytest.mark.parametrize("entity_id", [START_MEASUREMENT, "button.test_restart"])
 async def test_button_surfaces_connection_failure(
     hass: HomeAssistant, setup_entry, entity_id: str
 ):
@@ -124,8 +140,6 @@ async def test_button_surfaces_connection_failure(
     with patch(
         SEND_COMMAND, AsyncMock(side_effect=OSError("Connection refused"))
     ), pytest.raises(HomeAssistantError) as err:
-        await hass.services.async_call(
-            BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: entity_id}, blocking=True
-        )
+        await _press(hass, entity_id)
 
     assert err.value.translation_key == "command_failed"

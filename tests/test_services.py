@@ -15,6 +15,8 @@ from custom_components.liquid_check import (
     SERVICE_START_MEASURE,
 )
 
+from .conftest import FakeDevice
+
 API_RESPONSE = json.loads(
     (Path(__file__).parent / "fixtures" / "api_response.json").read_text()
 )
@@ -23,7 +25,7 @@ ENTRY_ID = "test123"
 
 
 @pytest.fixture
-async def device_id(hass: HomeAssistant) -> str:
+async def device_id(hass: HomeAssistant, device: FakeDevice) -> str:
     """Set the integration up and return its device registry ID."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -32,12 +34,8 @@ async def device_id(hass: HomeAssistant) -> str:
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "custom_components.liquid_check.client.LiquidCheckClient.get_info",
-        AsyncMock(return_value=API_RESPONSE),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     devices = dr.async_entries_for_config_entry(dr.async_get(hass), entry.entry_id)
     assert len(devices) == 1
@@ -49,22 +47,30 @@ async def device_id(hass: HomeAssistant) -> str:
     [(SERVICE_START_MEASURE, "StartMeasure"), (SERVICE_RESTART, "Restart")],
 )
 async def test_service_sends_command(
-    hass: HomeAssistant, device_id: str, service: str, command: str
+    hass: HomeAssistant, device_id: str, device: FakeDevice, service: str, command: str
 ):
     """Test each service reaches the device behind the given device ID."""
     assert hass.services.has_service(DOMAIN, service)
 
-    send_command = AsyncMock()
-    with patch(
-        "custom_components.liquid_check.client.LiquidCheckClient.send_command",
-        send_command,
-    ):
-        await hass.services.async_call(
-            DOMAIN, service, {"device_id": device_id}, blocking=True
-        )
-        await hass.async_block_till_done()
+    await hass.services.async_call(
+        DOMAIN, service, {"device_id": device_id}, blocking=True
+    )
+    await hass.async_block_till_done()
 
-    send_command.assert_awaited_once_with(command)
+    assert device.commands == [command]
+
+
+async def test_start_measure_waits_for_the_new_reading(
+    hass: HomeAssistant, device_id: str
+):
+    """Test an automation's next step sees the reading the service took."""
+    assert hass.states.get("sensor.test_content").state == "960"
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_START_MEASURE, {"device_id": device_id}, blocking=True
+    )
+
+    assert hass.states.get("sensor.test_content").state == "1234"
 
 
 @pytest.mark.parametrize("service", [SERVICE_START_MEASURE, SERVICE_RESTART])
@@ -117,7 +123,7 @@ async def test_service_surfaces_connection_failure(
 
 
 async def test_documented_yaml_form_reaches_the_device(
-    hass: HomeAssistant, device_id: str
+    hass: HomeAssistant, device_id: str, device: FakeDevice
 ):
     """Test the call shape the README documents actually works.
 
@@ -126,31 +132,26 @@ async def test_documented_yaml_form_reaches_the_device(
     """
     from homeassistant.setup import async_setup_component
 
-    send_command = AsyncMock()
-    with patch(
-        "custom_components.liquid_check.client.LiquidCheckClient.send_command",
-        send_command,
-    ):
-        assert await async_setup_component(
-            hass,
-            "script",
-            {
-                "script": {
-                    "measure": {
-                        "sequence": [
-                            {
-                                "action": "liquid_check.start_measure",
-                                "data": {"device_id": device_id},
-                            }
-                        ]
-                    }
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "measure": {
+                    "sequence": [
+                        {
+                            "action": "liquid_check.start_measure",
+                            "data": {"device_id": device_id},
+                        }
+                    ]
                 }
-            },
-        )
-        await hass.services.async_call("script", "measure", blocking=True)
-        await hass.async_block_till_done()
+            }
+        },
+    )
+    await hass.services.async_call("script", "measure", blocking=True)
+    await hass.async_block_till_done()
 
-    send_command.assert_awaited_once_with("StartMeasure")
+    assert device.commands == ["StartMeasure"]
 
 
 @pytest.mark.parametrize("service", [SERVICE_START_MEASURE, SERVICE_RESTART])

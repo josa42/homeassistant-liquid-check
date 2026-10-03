@@ -139,7 +139,10 @@ fill it in for you.
 
 ### Start Measurement
 
-Trigger a new measurement on the device.
+Trigger a new measurement on the device. The action returns once the device has
+the new reading, so the next step of an automation already sees it. A
+measurement takes a few seconds while the pump runs. If no new reading arrives
+within 60 seconds, the action fails.
 
 ```yaml
 action: liquid_check.start_measure

@@ -111,6 +111,9 @@
     },
     "device_not_loaded": {
       "message": "The Liquid Check device {name} is not loaded."
+    },
+    "measurement_timeout": {
+      "message": "The Liquid Check device at {host} started the measurement but reported no new reading within {seconds} seconds."
     }
   },
   "services": {

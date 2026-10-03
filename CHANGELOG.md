@@ -22,5 +22,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sensors no longer all become unavailable when the device reports an empty section.
 - Pressing a button while the device is unreachable now shows a clear error instead of an unexpected one.
 - The `start_measure` and `restart` actions now refuse a device whose integration is not loaded.
+- Start measurement (button, action and device action) now waits for the new reading instead of showing the previous one, and fails if none arrives within 60 seconds.
 
 [Unreleased]: https://github.com/josa42/homeassistant-liquid-check/compare/v1.2.0...HEAD

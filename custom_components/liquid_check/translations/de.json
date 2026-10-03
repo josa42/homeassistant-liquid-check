@@ -111,6 +111,9 @@
     },
     "device_not_loaded": {
       "message": "Das Liquid-Check-Gerät {name} ist nicht geladen."
+    },
+    "measurement_timeout": {
+      "message": "Das Liquid-Check-Gerät unter {host} hat die Messung gestartet, aber innerhalb von {seconds} Sekunden keinen neuen Messwert geliefert."
     }
   },
   "services": {

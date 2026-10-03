@@ -62,10 +62,7 @@ class LiquidCheckStartMeasureButton(LiquidCheckBaseButton):
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        await self._send_command("StartMeasure")
-        # The reading the device just took is only visible after a refetch;
-        # without this the sensors keep the old value until the next poll.
-        await self._coordinator.async_request_refresh()
+        await self._coordinator.async_measure()
 
 
 class LiquidCheckRestartButton(LiquidCheckBaseButton):

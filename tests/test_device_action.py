@@ -1,7 +1,6 @@
 """Test the Liquid Check device actions."""
 import json
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
 
 import pytest
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -19,13 +18,15 @@ from custom_components.liquid_check.device_action import (
     async_call_action_from_config,
 )
 
+from .conftest import FakeDevice
+
 API_RESPONSE = json.loads(
     (Path(__file__).parent / "fixtures" / "api_response.json").read_text()
 )
 
 
 @pytest.fixture
-async def device_id(hass: HomeAssistant) -> str:
+async def device_id(hass: HomeAssistant, device: FakeDevice) -> str:
     """Set the integration up and return its device registry ID."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -34,12 +35,8 @@ async def device_id(hass: HomeAssistant) -> str:
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "custom_components.liquid_check.client.LiquidCheckClient.get_info",
-        AsyncMock(return_value=API_RESPONSE),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     devices = dr.async_entries_for_config_entry(dr.async_get(hass), entry.entry_id)
     return devices[0].id
@@ -62,31 +59,30 @@ async def test_actions_are_offered_for_the_device(hass: HomeAssistant, device_id
     [("start_measure", "StartMeasure"), ("restart", "Restart")],
 )
 async def test_action_reaches_the_device(
-    hass: HomeAssistant, device_id: str, action_type: str, command: str
+    hass: HomeAssistant,
+    device_id: str,
+    device: FakeDevice,
+    action_type: str,
+    command: str,
 ):
     """Test running an action sends the command to the right device.
 
     The action passes a device registry ID straight through to the service, so
     this breaks whenever the service stops resolving that ID correctly.
     """
-    send_command = AsyncMock()
-    with patch(
-        "custom_components.liquid_check.client.LiquidCheckClient.send_command",
-        send_command,
-    ):
-        await async_call_action_from_config(
-            hass,
-            {
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_TYPE: action_type,
-            },
-            {},
-            None,
-        )
-        await hass.async_block_till_done()
+    await async_call_action_from_config(
+        hass,
+        {
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_TYPE: action_type,
+        },
+        {},
+        None,
+    )
+    await hass.async_block_till_done()
 
-    send_command.assert_awaited_once_with(command)
+    assert device.commands == [command]
 
 
 async def test_every_action_type_has_a_name():

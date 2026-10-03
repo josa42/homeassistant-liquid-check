@@ -65,15 +65,6 @@ def _coordinator_for_device(
     )
 
 
-async def _async_send_device_command(
-    hass: HomeAssistant, device_id: str, command_name: str, action: str
-) -> None:
-    """Send a command to the Liquid Check device behind a device registry ID."""
-    coordinator = _coordinator_for_device(hass, device_id)
-    await coordinator.async_send_command(command_name)
-    _LOGGER.info("%s on device %s", action, coordinator.entry.data["host"])
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the Liquid Check services.
 
@@ -83,15 +74,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def handle_start_measure(call: ServiceCall) -> None:
         """Handle the start_measure service call."""
-        await _async_send_device_command(
-            hass, call.data["device_id"], "StartMeasure", "Measurement started"
-        )
+        coordinator = _coordinator_for_device(hass, call.data["device_id"])
+        await coordinator.async_measure()
+        _LOGGER.info("Measurement taken on device %s", coordinator.entry.data["host"])
 
     async def handle_restart(call: ServiceCall) -> None:
         """Handle the restart service call."""
-        await _async_send_device_command(
-            hass, call.data["device_id"], "Restart", "Device restarting"
-        )
+        coordinator = _coordinator_for_device(hass, call.data["device_id"])
+        await coordinator.async_send_command("Restart")
+        _LOGGER.info("Restarting device %s", coordinator.entry.data["host"])
 
     hass.services.async_register(
         DOMAIN,
