@@ -9,6 +9,7 @@ from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.button import SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
     async_fire_time_changed,
@@ -111,3 +112,20 @@ async def test_restarting_does_not_refresh(hass: HomeAssistant, setup_entry, fre
         await hass.async_block_till_done()
 
     assert get_info.await_count == 0
+
+
+@pytest.mark.parametrize(
+    "entity_id", ["button.test_start_measurement", "button.test_restart"]
+)
+async def test_button_surfaces_connection_failure(
+    hass: HomeAssistant, setup_entry, entity_id: str
+):
+    """Test an unreachable device fails with a translated error, not a raw one."""
+    with patch(
+        SEND_COMMAND, AsyncMock(side_effect=OSError("Connection refused"))
+    ), pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+
+    assert err.value.translation_key == "command_failed"

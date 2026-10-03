@@ -46,7 +46,7 @@ class LiquidCheckBaseButton(ButtonEntity):
 
     async def _send_command(self, command_name: str) -> None:
         """Send command to device."""
-        await self._coordinator.client.send_command(command_name)
+        await self._coordinator.async_send_command(command_name)
 
 
 class LiquidCheckStartMeasureButton(LiquidCheckBaseButton):

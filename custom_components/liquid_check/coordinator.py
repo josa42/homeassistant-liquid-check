@@ -6,6 +6,7 @@ from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.entity import DeviceInfo
@@ -82,6 +83,17 @@ class LiquidCheckDataUpdateCoordinator(DataUpdateCoordinator):
             return result
         except Exception as err:
             raise UpdateFailed(f"Error fetching data: {err}") from err
+
+    async def async_send_command(self, command_name: str) -> None:
+        """Send a command to the device, failing with a user-facing error."""
+        try:
+            await self.client.send_command(command_name)
+        except Exception as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"host": self.entry.data["host"]},
+            ) from err
 
     @property
     def device_info(self) -> DeviceInfo:
