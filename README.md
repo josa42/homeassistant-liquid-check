@@ -16,7 +16,7 @@ A Home Assistant integration to use the [Liquid-Check](https://liquid-check-info
 - 💧 **Withdrawal & Inflow** - Count the liquid taken out and added, as water meters
 - 🔌 **Pump Monitoring** - Track connected pump runs and runtime
 - 📡 **WiFi Signal** - Monitor device connectivity (RSSI)
-- ⏱️ **Uptime Tracking** - Device and measurement age monitoring
+- ⏱️ **Uptime Tracking** - Device boot time and measurement age
 - 🔧 **Remote Control** - Trigger measurements and restart device
 - 🔄 **Configurable Updates** - Set custom polling intervals (default: 60s, or disable automatic polling)
 - 📱 **Full Device Support** - Shows up in Home Assistant devices tab
@@ -92,7 +92,7 @@ The integration provides 14 sensors:
 | **WiFi RSSI** | WiFi signal strength | dBm | |
 | **Pump total runs** | Connected pump total cycles | - | |
 | **Pump total runtime** | Connected pump total operation time | s | |
-| **Uptime** | Device uptime | s | |
+| **Last boot** | When the device last started | timestamp | |
 | **Error** | Device error status | - | |
 | **Firmware** | Firmware version | - | |
 | **Measurement age** | Time since last measurement | s | |

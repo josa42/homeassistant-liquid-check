@@ -70,6 +70,9 @@
       "inflow": {
         "name": "Inflow"
       },
+      "last_boot": {
+        "name": "Last boot"
+      },
       "level": {
         "name": "Level"
       },
@@ -87,9 +90,6 @@
       },
       "tank_max_level": {
         "name": "Tank max level"
-      },
-      "uptime": {
-        "name": "Uptime"
       },
       "wifi_rssi": {
         "name": "WiFi RSSI"

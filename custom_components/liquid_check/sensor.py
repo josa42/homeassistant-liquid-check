@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -19,12 +20,15 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .config_flow import LIQUID_WATER, liquid, tolerance
+from .const import DOMAIN
 from .coordinator import LiquidCheckDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,6 +42,13 @@ async def async_setup_entry(
     """Set up Liquid Check sensor based on a config entry."""
     coordinator = entry.runtime_data
 
+    # The uptime sensor was replaced by the last boot sensor.
+    registry = er.async_get(hass)
+    if uptime := registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{entry.entry_id}_uptime"
+    ):
+        registry.async_remove(uptime)
+
     async_add_entities(
         [
             LiquidCheckLevelSensor(coordinator, entry),
@@ -48,7 +59,7 @@ async def async_setup_entry(
             LiquidCheckWiFiRSSISensor(coordinator, entry),
             LiquidCheckPumpTotalRunsSensor(coordinator, entry),
             LiquidCheckPumpTotalRuntimeSensor(coordinator, entry),
-            LiquidCheckUptimeSensor(coordinator, entry),
+            LiquidCheckLastBootSensor(coordinator, entry),
             LiquidCheckErrorSensor(coordinator, entry),
             LiquidCheckFirmwareSensor(coordinator, entry),
             LiquidCheckMeasurementAgeSensor(coordinator, entry),
@@ -333,29 +344,53 @@ class LiquidCheckPumpTotalRuntimeSensor(LiquidCheckBaseSensor):
         return None
 
 
-class LiquidCheckUptimeSensor(LiquidCheckBaseSensor):
-    """Representation of Liquid Check Uptime Sensor."""
+class LiquidCheckLastBootSensor(LiquidCheckBaseSensor):
+    """Representation of the time the Liquid Check device last started."""
 
-    _attr_translation_key = "uptime"
-    _attr_device_class = SensorDeviceClass.DURATION
-    _attr_state_class = SensorStateClass.TOTAL_INCREASING
-    _attr_native_unit_of_measurement = UnitOfTime.SECONDS
+    _attr_translation_key = "last_boot"
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
+
+    # Boot time is derived from the uptime and the time of the fetch, so it
+    # shifts by a few seconds from poll to poll. Smaller shifts are that jitter
+    # rather than a restart and would only flood the history with new states.
+    _jitter = timedelta(seconds=60)
 
     def __init__(
         self, coordinator: LiquidCheckDataUpdateCoordinator, entry: ConfigEntry
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, entry)
-        self._attr_unique_id = f"{entry.entry_id}_uptime"
+        self._attr_unique_id = f"{entry.entry_id}_last_boot"
+        self._boot: datetime | None = None
+        self._update_boot()
 
     @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        if self.coordinator.data:
-            return self.coordinator.data.get("uptime")
-        return None
+    def native_value(self) -> datetime | None:
+        """Return when the device last started."""
+        return self._boot
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Take the boot time from the fresh uptime, then write the state."""
+        self._update_boot()
+        super()._handle_coordinator_update()
+
+    def _update_boot(self) -> None:
+        """Move the boot time, unless the change is only jitter."""
+        # After a failed fetch the uptime is stale, and subtracting it from the
+        # current time would place the boot later than it really was.
+        if not self.coordinator.last_update_success:
+            return
+
+        uptime = (self.coordinator.data or {}).get("uptime")
+        if uptime is None:
+            return
+
+        boot = dt_util.utcnow() - timedelta(seconds=uptime)
+        if self._boot is None or abs(boot - self._boot) > self._jitter:
+            self._boot = boot
 
 
 class LiquidCheckErrorSensor(LiquidCheckBaseSensor):

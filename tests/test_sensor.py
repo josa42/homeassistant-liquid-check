@@ -91,12 +91,12 @@ async def test_sensor_entities_have_correct_units():
         LiquidCheckContentSensor,
         LiquidCheckErrorSensor,
         LiquidCheckFirmwareSensor,
+        LiquidCheckLastBootSensor,
         LiquidCheckLevelSensor,
         LiquidCheckMeasurementAgeSensor,
         LiquidCheckPercentSensor,
         LiquidCheckPumpTotalRunsSensor,
         LiquidCheckPumpTotalRuntimeSensor,
-        LiquidCheckUptimeSensor,
         LiquidCheckWiFiRSSISensor,
     )
     
@@ -157,12 +157,10 @@ async def test_sensor_entities_have_correct_units():
     assert runtime_sensor._attr_state_class == "total_increasing"
     assert runtime_sensor.native_value == 43
     
-    # Test uptime sensor
-    uptime_sensor = LiquidCheckUptimeSensor(coordinator, entry)
-    assert uptime_sensor._attr_device_class == "duration"
-    assert uptime_sensor._attr_native_unit_of_measurement == UnitOfTime.SECONDS
-    assert uptime_sensor._attr_state_class == "total_increasing"
-    assert uptime_sensor.native_value == 7804
+    # Test last boot sensor
+    last_boot_sensor = LiquidCheckLastBootSensor(coordinator, entry)
+    assert last_boot_sensor.device_class == "timestamp"
+    assert last_boot_sensor.state_class is None
     
     # Test error sensor
     error_sensor = LiquidCheckErrorSensor(coordinator, entry)
@@ -253,13 +251,13 @@ async def test_sensor_state_classes_are_valid_for_device_class():
         LiquidCheckContentSensor,
         LiquidCheckErrorSensor,
         LiquidCheckFirmwareSensor,
+        LiquidCheckLastBootSensor,
         LiquidCheckLevelSensor,
         LiquidCheckMeasurementAgeSensor,
         LiquidCheckPercentSensor,
         LiquidCheckPumpTotalRunsSensor,
         LiquidCheckPumpTotalRuntimeSensor,
         LiquidCheckTankMaxLevelSensor,
-        LiquidCheckUptimeSensor,
         LiquidCheckWiFiRSSISensor,
         LiquidCheckWiFiSSIDSensor,
     )
@@ -278,7 +276,7 @@ async def test_sensor_state_classes_are_valid_for_device_class():
         LiquidCheckWiFiRSSISensor,
         LiquidCheckPumpTotalRunsSensor,
         LiquidCheckPumpTotalRuntimeSensor,
-        LiquidCheckUptimeSensor,
+        LiquidCheckLastBootSensor,
         LiquidCheckErrorSensor,
         LiquidCheckFirmwareSensor,
         LiquidCheckMeasurementAgeSensor,
@@ -314,13 +312,13 @@ async def test_only_primary_readings_are_uncategorised():
         LiquidCheckContentSensor,
         LiquidCheckErrorSensor,
         LiquidCheckFirmwareSensor,
+        LiquidCheckLastBootSensor,
         LiquidCheckLevelSensor,
         LiquidCheckMeasurementAgeSensor,
         LiquidCheckPercentSensor,
         LiquidCheckPumpTotalRunsSensor,
         LiquidCheckPumpTotalRuntimeSensor,
         LiquidCheckTankMaxLevelSensor,
-        LiquidCheckUptimeSensor,
         LiquidCheckWiFiRSSISensor,
         LiquidCheckWiFiSSIDSensor,
     )
@@ -341,7 +339,7 @@ async def test_only_primary_readings_are_uncategorised():
         LiquidCheckWiFiRSSISensor,
         LiquidCheckPumpTotalRunsSensor,
         LiquidCheckPumpTotalRuntimeSensor,
-        LiquidCheckUptimeSensor,
+        LiquidCheckLastBootSensor,
         LiquidCheckErrorSensor,
         LiquidCheckFirmwareSensor,
         LiquidCheckMeasurementAgeSensor,

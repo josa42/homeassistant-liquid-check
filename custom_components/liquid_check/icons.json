@@ -18,6 +18,9 @@
       "inflow": {
         "default": "mdi:water-plus"
       },
+      "last_boot": {
+        "default": "mdi:restart"
+      },
       "level": {
         "default": "mdi:waves-arrow-up"
       },
@@ -35,9 +38,6 @@
       },
       "tank_max_level": {
         "default": "mdi:arrow-expand-vertical"
-      },
-      "uptime": {
-        "default": "mdi:timer-outline"
       },
       "wifi_ssid": {
         "default": "mdi:wifi-settings"

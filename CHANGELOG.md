@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Buttons no longer request an update when they are added, which had no effect.
+- **Breaking:** the Uptime sensor is replaced by **Last boot**, the time the device last started. Update automations and dashboards that use `sensor.<name>_uptime`.
 
 ### Fixed
 

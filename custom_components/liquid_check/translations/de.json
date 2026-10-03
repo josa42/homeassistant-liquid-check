@@ -70,6 +70,9 @@
       "inflow": {
         "name": "Zulauf"
       },
+      "last_boot": {
+        "name": "Letzter Start"
+      },
       "level": {
         "name": "Füllhöhe"
       },
@@ -87,9 +90,6 @@
       },
       "tank_max_level": {
         "name": "Maximale Füllhöhe"
-      },
-      "uptime": {
-        "name": "Betriebszeit"
       },
       "wifi_rssi": {
         "name": "WLAN-Signalstärke"
