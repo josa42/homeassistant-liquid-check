@@ -396,3 +396,44 @@ async def test_tank_and_wifi_detail_sensors_read_their_values():
     coordinator.data = None
     assert max_level.native_value is None
     assert ssid.native_value is None
+
+
+async def test_coordinator_tolerates_null_sections(hass: HomeAssistant):
+    """Test a section the device reports as null reads as missing values.
+
+    The firmware sends null for objects it has nothing for (see `expansion` in
+    the fixture). A null section used to raise and take every sensor down.
+    """
+    from unittest.mock import AsyncMock, MagicMock, patch
+
+    from custom_components.liquid_check.coordinator import (
+        LiquidCheckDataUpdateCoordinator,
+    )
+
+    entry = MagicMock()
+    entry.data = {"name": "Test", "host": "192.168.1.100"}
+    entry.options = {}
+
+    coordinator = LiquidCheckDataUpdateCoordinator(hass, entry)
+
+    response = {
+        "payload": {
+            "measure": {"level": 0.24, "content": 960, "tank": None},
+            "system": {"error": 0, "pump": None},
+            "wifi": {"station": None, "accessPoint": None},
+            "device": None,
+        }
+    }
+    with patch(
+        "custom_components.liquid_check.client.LiquidCheckClient.get_info",
+        AsyncMock(return_value=response),
+    ):
+        result = await coordinator._async_update_data()
+
+    assert result["level"] == 0.24
+    assert result["content"] == 960
+    assert result["maxLevel"] is None
+    assert result["totalRuns"] is None
+    assert result["mac"] is None
+    assert result["rssi"] is None
+    assert result["firmware"] is None

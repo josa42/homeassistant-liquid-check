@@ -44,40 +44,40 @@ class LiquidCheckDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch data from API."""
         try:
             data = await self.client.get_info()
-            payload = data.get("payload", {})
+            payload = data.get("payload") or {}
             
             # Flatten the nested structure for easier access
             result = {}
             
             # Get measure data
-            measure = payload.get("measure", {})
+            measure = payload.get("measure") or {}
             result["level"] = measure.get("level")
             result["content"] = measure.get("content")
             result["percent"] = measure.get("percent")
             result["age"] = measure.get("age")
-            result["maxLevel"] = measure.get("tank", {}).get("maxLevel")
+            result["maxLevel"] = (measure.get("tank") or {}).get("maxLevel")
             
             # Get system data
-            system = payload.get("system", {})
+            system = payload.get("system") or {}
             result["error"] = system.get("error")
             result["uptime"] = system.get("uptime")
             
             # Get pump data
-            pump = system.get("pump", {})
+            pump = system.get("pump") or {}
             result["totalRuns"] = pump.get("totalRuns")
             result["totalRuntime"] = pump.get("totalRuntime")
             
             # Get WiFi data
-            wifi = payload.get("wifi", {})
-            access_point = wifi.get("accessPoint", {})
+            wifi = payload.get("wifi") or {}
+            access_point = wifi.get("accessPoint") or {}
             result["rssi"] = access_point.get("rssi")
             result["ssid"] = access_point.get("ssid")
             
             # Get device data
-            device = payload.get("device", {})
+            device = payload.get("device") or {}
             result["firmware"] = device.get("firmware")
             result["hardware"] = device.get("hardware")
-            result["mac"] = wifi.get("station", {}).get("mac")
+            result["mac"] = (wifi.get("station") or {}).get("mac")
             
             return result
         except Exception as err:
