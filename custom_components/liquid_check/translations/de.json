@@ -106,6 +106,9 @@
     },
     "command_failed": {
       "message": "Das Liquid-Check-Gerät unter {host} ist nicht erreichbar."
+    },
+    "device_not_loaded": {
+      "message": "Das Liquid-Check-Gerät {name} ist nicht geladen."
     }
   },
   "services": {

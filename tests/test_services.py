@@ -151,3 +151,24 @@ async def test_documented_yaml_form_reaches_the_device(
         await hass.async_block_till_done()
 
     send_command.assert_awaited_once_with("StartMeasure")
+
+
+@pytest.mark.parametrize("service", [SERVICE_START_MEASURE, SERVICE_RESTART])
+async def test_service_rejects_an_unloaded_device(
+    hass: HomeAssistant, device_id: str, service: str
+):
+    """Test a device whose entry is not loaded is not sent commands."""
+    await hass.config_entries.async_unload(ENTRY_ID)
+    await hass.async_block_till_done()
+
+    send_command = AsyncMock()
+    with patch(
+        "custom_components.liquid_check.client.LiquidCheckClient.send_command",
+        send_command,
+    ), pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN, service, {"device_id": device_id}, blocking=True
+        )
+
+    assert err.value.translation_key == "device_not_loaded"
+    send_command.assert_not_awaited()

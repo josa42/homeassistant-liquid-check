@@ -4,16 +4,14 @@ from __future__ import annotations
 import logging
 
 import voluptuous as vol
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .client import LiquidCheckClient
 from .const import DOMAIN
 from .coordinator import LiquidCheckDataUpdateCoordinator
 
@@ -38,8 +36,10 @@ SERVICE_RESTART_SCHEMA = vol.Schema(
 )
 
 
-def _config_entry_for_device(hass: HomeAssistant, device_id: str) -> ConfigEntry:
-    """Return the config entry backing a device registry ID.
+def _coordinator_for_device(
+    hass: HomeAssistant, device_id: str
+) -> LiquidCheckDataUpdateCoordinator:
+    """Return the coordinator of the config entry backing a device registry ID.
 
     Service calls carry the device registry ID handed over by the device
     selector, which is not the config entry ID.
@@ -48,8 +48,15 @@ def _config_entry_for_device(hass: HomeAssistant, device_id: str) -> ConfigEntry
     if device is not None:
         for entry_id in device.config_entries:
             config_entry = hass.config_entries.async_get_entry(entry_id)
-            if config_entry is not None and config_entry.domain == DOMAIN:
-                return config_entry
+            if config_entry is None or config_entry.domain != DOMAIN:
+                continue
+            if config_entry.state is not ConfigEntryState.LOADED:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="device_not_loaded",
+                    translation_placeholders={"name": config_entry.title},
+                )
+            return config_entry.runtime_data
 
     raise ServiceValidationError(
         translation_domain=DOMAIN,
@@ -62,20 +69,9 @@ async def _async_send_device_command(
     hass: HomeAssistant, device_id: str, command_name: str, action: str
 ) -> None:
     """Send a command to the Liquid Check device behind a device registry ID."""
-    config_entry = _config_entry_for_device(hass, device_id)
-    client = LiquidCheckClient(
-        config_entry.data["host"], async_get_clientsession(hass)
-    )
-
-    try:
-        await client.send_command(command_name)
-        _LOGGER.info("%s on device %s", action, config_entry.data["host"])
-    except Exception as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="command_failed",
-            translation_placeholders={"host": config_entry.data["host"]},
-        ) from err
+    coordinator = _coordinator_for_device(hass, device_id)
+    await coordinator.async_send_command(command_name)
+    _LOGGER.info("%s on device %s", action, coordinator.entry.data["host"])
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

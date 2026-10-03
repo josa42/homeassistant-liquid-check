@@ -106,6 +106,9 @@
     },
     "command_failed": {
       "message": "Could not reach the Liquid Check device at {host}."
+    },
+    "device_not_loaded": {
+      "message": "The Liquid Check device {name} is not loaded."
     }
   },
   "services": {
