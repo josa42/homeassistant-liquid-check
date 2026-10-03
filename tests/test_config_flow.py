@@ -172,3 +172,25 @@ async def test_unique_id_falls_back_to_the_host(hass: HomeAssistant):
     assert hass.config_entries.async_entries("liquid_check")[0].unique_id == (
         "192.168.1.100"
     )
+
+
+async def test_form_stores_the_trimmed_host(hass: HomeAssistant):
+    """Test surrounding spaces do not end up in the URL the coordinator builds.
+
+    The host was validated trimmed but stored as typed, so the connection check
+    passed and every later request went to `http:// 192.168.1.100/...`.
+    """
+    result = await hass.config_entries.flow.async_init(
+        "liquid_check", context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(GET_INFO, AsyncMock(return_value=API_RESPONSE)), patch(
+        "custom_components.liquid_check.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"name": "Test Device", "host": " 192.168.1.100 "}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"]["host"] == "192.168.1.100"

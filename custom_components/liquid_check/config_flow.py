@@ -108,7 +108,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain="liquid_check"):
                 self._abort_if_unique_id_configured(
                     updates={"host": user_input["host"].strip()}
                 )
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(
+                    title=info["title"],
+                    data={**user_input, "host": user_input["host"].strip()},
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
