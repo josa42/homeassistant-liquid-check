@@ -26,8 +26,7 @@ async def async_setup_entry(
         [
             LiquidCheckStartMeasureButton(coordinator, entry),
             LiquidCheckRestartButton(coordinator, entry),
-        ],
-        True,
+        ]
     )
 
 

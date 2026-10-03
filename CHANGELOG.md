@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Buttons no longer request an update when they are added, which had no effect.
+
 ### Fixed
 
 - Spaces around the host entered during setup no longer break the connection to the device.
