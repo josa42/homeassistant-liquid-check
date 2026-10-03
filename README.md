@@ -108,9 +108,11 @@ device itself, so you only need the firmware sensor if you template against it.
 ## Withdrawal and inflow
 
 **Withdrawal** and **Inflow** turn the level into two running totals: how much
-liquid has left the tank, and how much has gone in. Both are water meters, so
-they can go straight into the energy dashboard and into utility meters for daily
-or monthly figures.
+liquid has left the tank, and how much has gone in. Both can go into utility
+meters for daily or monthly figures. For a water tank they are water meters and
+can also go straight into the energy dashboard. For heating oil or any other
+liquid, set **Liquid** to *Other liquid* under **Configure**, and they are
+counted as plain volume instead.
 
 The device reports the content in steps, and a reading wobbles by a step on its
 own, which would otherwise pile up into hundreds of liters a day. So each

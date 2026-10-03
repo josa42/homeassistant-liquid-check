@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .config_flow import tolerance
+from .config_flow import LIQUID_WATER, liquid, tolerance
 from .coordinator import LiquidCheckDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -173,7 +173,6 @@ class LiquidCheckCounterSensor(LiquidCheckBaseSensor, RestoreEntity):
     are booked as soon as they add up past it.
     """
 
-    _attr_device_class = SensorDeviceClass.WATER
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_native_unit_of_measurement = UnitOfVolume.LITERS
     _attr_suggested_display_precision = 0
@@ -187,6 +186,11 @@ class LiquidCheckCounterSensor(LiquidCheckBaseSensor, RestoreEntity):
         """Initialize the sensor."""
         super().__init__(coordinator, entry)
         self._attr_unique_id = f"{entry.entry_id}_{self._key}"
+        self._attr_device_class = (
+            SensorDeviceClass.WATER
+            if liquid(entry) == LIQUID_WATER
+            else SensorDeviceClass.VOLUME
+        )
         self._total = 0.0
         self._mark: float | None = None
 

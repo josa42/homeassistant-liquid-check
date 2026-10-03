@@ -10,11 +10,20 @@ from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .client import LiquidCheckClient
 
 DEFAULT_SCAN_INTERVAL = 60
 DEFAULT_TOLERANCE = 50
+
+LIQUID_WATER = "water"
+LIQUID_OTHER = "other"
+DEFAULT_LIQUID = LIQUID_WATER
 
 
 def scan_interval(entry: config_entries.ConfigEntry) -> int:
@@ -38,6 +47,15 @@ def tolerance(entry: config_entries.ConfigEntry) -> float:
     return float(
         entry.options.get("tolerance", entry.data.get("tolerance", DEFAULT_TOLERANCE))
     )
+
+
+def liquid(entry: config_entries.ConfigEntry) -> str:
+    """Return what the tank holds.
+
+    Only water belongs on the water dashboard; a tank of heating oil or any
+    other liquid is counted as plain volume.
+    """
+    return entry.options.get("liquid", DEFAULT_LIQUID)
 
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -124,7 +142,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Manage the poll interval and the counting tolerance."""
+        """Manage the poll interval, the counting tolerance and the liquid."""
         if user_input is not None:
             return self.async_create_entry(data=user_input)
 
@@ -140,6 +158,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         "tolerance",
                         default=tolerance(self.config_entry),
                     ): vol.All(vol.Coerce(float), vol.Range(min=0, max=1000)),
+                    vol.Optional(
+                        "liquid",
+                        default=liquid(self.config_entry),
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[LIQUID_WATER, LIQUID_OTHER],
+                            mode=SelectSelectorMode.DROPDOWN,
+                            translation_key="liquid",
+                        )
+                    ),
                 }
             ),
         )

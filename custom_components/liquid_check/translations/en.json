@@ -31,11 +31,13 @@
         "title": "Liquid Check options",
         "data": {
           "scan_interval": "Scan Interval (seconds)",
-          "tolerance": "Tolerance (liters)"
+          "tolerance": "Tolerance (liters)",
+          "liquid": "Liquid"
         },
         "data_description": {
           "scan_interval": "How often to fetch data from the device (0 to disable automatic polling, 1-3600 seconds, default: 60)",
-          "tolerance": "How far the level has to move before it counts as liquid taken out or added, instead of a wobbling reading (0-1000 liters, default: 50)"
+          "tolerance": "How far the level has to move before it counts as liquid taken out or added, instead of a wobbling reading (0-1000 liters, default: 50)",
+          "liquid": "What the tank holds. Withdrawal and inflow of water can feed the water dashboard; any other liquid is counted as plain volume."
         }
       }
     }
@@ -130,6 +132,14 @@
           "name": "Device",
           "description": "The device to trigger the measurement on."
         }
+      }
+    }
+  },
+  "selector": {
+    "liquid": {
+      "options": {
+        "water": "Water",
+        "other": "Other liquid (e.g. heating oil)"
       }
     }
   }

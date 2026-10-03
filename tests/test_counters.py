@@ -155,3 +155,14 @@ async def test_counters_are_water_meters(hass: HomeAssistant):
         assert state.attributes["device_class"] == "water"
         assert state.attributes["state_class"] == "total_increasing"
         assert state.attributes["unit_of_measurement"] == "L"
+
+
+async def test_counters_for_other_liquids_are_plain_volume(hass: HomeAssistant):
+    """Test a tank of heating oil stays off the water dashboard."""
+    await _setup(hass, 1800, liquid="other")
+
+    for entity_id in (WITHDRAWAL, INFLOW):
+        state = hass.states.get(entity_id)
+        assert state.attributes["device_class"] == "volume"
+        assert state.attributes["state_class"] == "total_increasing"
+        assert state.attributes["unit_of_measurement"] == "L"

@@ -23,6 +23,7 @@ def _entities() -> dict[str, list]:
 
     entry = MagicMock()
     entry.data = {"name": "Test", "host": "192.168.1.100"}
+    entry.options = {}
     entry.entry_id = "test123"
 
     return {

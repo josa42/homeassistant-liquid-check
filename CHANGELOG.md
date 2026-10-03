@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Liquid** option to count withdrawal and inflow of heating oil or other liquids as plain volume instead of water.
+
 ### Changed
 
 - Buttons no longer request an update when they are added, which had no effect.
