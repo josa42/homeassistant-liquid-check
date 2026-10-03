@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Buttons no longer request an update when they are added, which had no effect.
 - **Breaking:** the Uptime sensor is replaced by **Last boot**, the time the device last started. Update automations and dashboards that use `sensor.<name>_uptime`.
 - CI calls the shared workflows in josa42/actions, where they moved from josa42/gha-workflows.
+- `make release` starts the release workflow: a minor version when a `feat` commit landed since the last release, a patch otherwise. Pass `VERSION=major`, `VERSION=minor`, `VERSION=patch` or `VERSION=1.2.3` to choose yourself.
 
 ### Fixed
 
